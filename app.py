@@ -120,8 +120,6 @@ def main() -> None:
     load_css(STYLES_DIR / "main.css")
     init_session_state()
     render_current_page()
-    Print('test test test')
-
 
 if __name__ == "__main__":
     main()
