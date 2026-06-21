@@ -30,7 +30,12 @@ def render_overview():
     a, b = st.columns(2)
     with a: _show(cs.chart_auc_bar())
     with b: _show(cs.chart_radar_like())
-    st.caption("불균형(이탈 82%)이라 PR-AUC는 높게 나옴 → 분별력은 ROC-AUC가 주지표. Recall은 운영 임계값 기준.")
+    st.markdown("**선형 그래프 — ROC / PR 곡선 (모델 비교)**")
+    a, b = st.columns(2)
+    with a: _show(cs.chart_roc(cs.model_list()))
+    with b: _show(cs.chart_pr(cs.model_list()))
+    st.caption("불균형(이탈 82%)이라 PR-AUC는 높게 나옴 → 분별력은 ROC-AUC가 주지표. Recall은 운영 임계값 기준. "
+               "Transformer(시퀀스)는 val 기준이라 ROC/PR 곡선은 정형 6모델만 표시.")
 
 
 def render_diagnostics():
@@ -185,6 +190,11 @@ def render_dashboard(role="customer", login_user="demo"):
         adb.init_db()
     except Exception:
         pass  # MySQL 미연결 — 차트는 표시, DB기능은 각 패널에서 경고
+    # 스크롤 수정: 랜딩용 .block-container(560px·flex중앙)를 대시보드에선 전체폭·일반흐름으로 복원
+    st.markdown("""<style>
+      .block-container{max-width:96% !important;min-height:auto !important;display:block !important;
+        align-items:initial !important;justify-content:initial !important;padding:24px 28px !important;}
+    </style>""", unsafe_allow_html=True)
     st.title("Anchor — 실시간 고객 이탈 분석")
     base = ["개요(Overview)", "고객 이탈 조회", "실시간 세션/바운스", "추천(Recommendation)"]
     admin_tabs = ["모델 진단(Diagnostics)", "관리자 로그/이력"]

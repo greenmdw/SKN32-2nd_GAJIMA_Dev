@@ -77,7 +77,11 @@ def comparison_table():
         if k in m and "auc" in m[k]:
             v = m[k]; rows.append({"model": k, "ROC_AUC": v["auc"], "PR_AUC": v["pr_auc"],
                                    "Recall": v.get("recall_at_thr") or _recall(k), "F1": v["f1"],
-                                   "Brier": v["brier"], "ECE": v.get("ece")})
+                                   "Brier": v["brier"], "ECE": v.get("ece"), "kind": "tabular"})
+    # 7번째: Transformer(시퀀스) — val_auc만 있어 별도 표기
+    if "Transformer" in m and m["Transformer"].get("val_auc") is not None:
+        rows.append({"model": "Transformer", "ROC_AUC": m["Transformer"]["val_auc"], "PR_AUC": None,
+                     "Recall": None, "F1": None, "Brier": None, "ECE": None, "kind": "sequence(val)"})
     df = pd.DataFrame(rows)
     return df.sort_values("ROC_AUC", ascending=False).reset_index(drop=True) if not df.empty else df
 

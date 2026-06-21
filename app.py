@@ -75,20 +75,23 @@ def render_login_page() -> None:
     st.title("로그인")
 
     # 1) 아이디 로그인 (기본·우선)
-    uid = st.text_input("아이디 (user_id)", value="demo01", key="login_uid")
-    role = st.radio("역할", ["customer", "admin"], horizontal=True, key="login_role",
-                    help="관리자만 모델 진단(15시각화)·로그 열람 — 교육과제 ③")
-    if st.button("로그인", type="primary", key="login_btn"):
-        if not uid:
-            st.error("아이디를 입력하세요.")
+    with st.form("login_form"):
+        uid = st.text_input("아이디 (user_id)", value="demo01", key="login_uid")
+        role = st.radio("역할", ["customer", "admin"], horizontal=True, key="login_role",
+                        help="관리자만 모델 진단(15시각화)·로그 열람 — 교육과제 ③")
+        login_submit = st.form_submit_button("로그인", type="primary")
+    if login_submit:
+        if not (uid or "").strip():
+            st.error("아이디(user_id)를 입력하세요.")
         else:
+            uid = uid.strip()
             try:
                 if db_on and not adb.get_user(uid):
                     adb.register_user(uid, uid, role, None, _silent=True)
                 if db_on:
                     adb.log_login(uid, success=True, similarity=None)                      # 과제①
-            except Exception as e:
-                st.warning(f"DB 기록 생략(MySQL 미연결): {e}")
+            except Exception:
+                st.warning("DB 기록 생략(MySQL 미연결) — 로그인은 진행.")
             st.session_state.update(is_logged_in=True, role=role, login_user=uid)
             go_to("dashboard"); st.rerun()
 
@@ -138,26 +141,24 @@ def render_register_page() -> None:
     if st.button("← 뒤로 (랜딩)", key="reg_back_top"):
         go_to("landing"); st.rerun()
     st.title("회원가입")
-    uid = st.text_input("아이디 (user_id)", key="reg_uid")
-    name = st.text_input("이름")
-    role = st.radio("역할", ["customer", "admin"], horizontal=True)
-    emb = None
-    if face_auth.HAS_FACE:
-        img = st.camera_input("얼굴 등록(선택)") or st.file_uploader("얼굴 사진(선택)", type=["jpg", "png", "jpeg"])
-        if img is not None:
-            emb = face_auth.embed_from_bytes(img.getvalue())
-            st.caption("얼굴 임베딩 추출 " + ("성공" if emb is not None else "실패(얼굴 미검출)"))
-    if st.button("등록"):
-        if not uid:
-            st.error("user_id를 입력하세요")
+    with st.form("register_form"):
+        uid = st.text_input("아이디 (user_id) — 필수", key="reg_uid")
+        name = st.text_input("이름")
+        role = st.radio("역할", ["customer", "admin"], horizontal=True)
+        img = st.camera_input("얼굴 등록(선택)") if face_auth.HAS_FACE else None
+        submitted = st.form_submit_button("등록")
+    if submitted:
+        if not (uid or "").strip():
+            st.error("아이디(user_id)는 필수입니다. ('이름'이 아니라 '아이디' 칸에 입력)")
         else:
+            emb = face_auth.embed_from_bytes(img.getvalue()) if img is not None else None
             try:
-                adb.register_user(uid, name or uid, role, emb)          # 과제②: 중복 시 예외
-                st.success(f"등록 완료: {uid}")
+                adb.register_user(uid.strip(), name or uid.strip(), role, emb)   # 과제②: 중복 시 예외
+                st.success(f"등록 완료: {uid.strip()} ({role})")
             except ValueError as e:
-                st.error(str(e))                                        # 과제②: 중복 ID 차단
-            except Exception as e:
-                st.warning(f"MySQL 미연결로 등록 보류: {e}")
+                st.error(str(e))                                                 # 과제②: 중복 ID 차단
+            except Exception:
+                st.error("MySQL 연결이 필요합니다 — backend/.env(MYSQL_*) 설정 후 MySQL 서버 실행. (Neon은 시뮬 전용)")
     if st.button("랜딩으로"):
         go_to("landing"); st.rerun()
 
