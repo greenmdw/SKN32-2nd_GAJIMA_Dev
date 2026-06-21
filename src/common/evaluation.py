@@ -1,0 +1,207 @@
+"""y_true / y_score 로부터 19-3 §6 평가 산출물을 생성한다.
+
+생성 파일(평가 디렉터리에 저장):
+  metrics_summary.json, threshold_curve.json, calibration_curve.json,
+  lift_curve.json, score_distribution.json, training_history.json,
+  shap_summary.json, business_value.json, eval_predictions.parquet
+"""
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import (
+    average_precision_score,
+    confusion_matrix,
+    precision_recall_fscore_support,
+    roc_auc_score,
+)
+
+# business_value 기본 가정 (19-3 §6.10)
+DEFAULT_ASSUMPTIONS = {"coupon_cost": 3000, "save_rate": 0.08, "avg_revenue": 42000}
+
+
+def _dump(path: Path, obj):
+    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _threshold_curve(y_true, y_score, thresholds):
+    prec, rec, f1 = [], [], []
+    for t in thresholds:
+        yp = (y_score >= t).astype(int)
+        p, r, f, _ = precision_recall_fscore_support(
+            y_true, yp, average="binary", zero_division=0
+        )
+        prec.append(float(p))
+        rec.append(float(r))
+        f1.append(float(f))
+    return prec, rec, f1
+
+
+def _calibration(y_true, y_score, n_bins=10):
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    prob_pred, prob_true, count = [], [], []
+    for i in range(n_bins):
+        lo, hi = edges[i], edges[i + 1]
+        mask = (y_score >= lo) & (y_score < hi) if i < n_bins - 1 else (y_score >= lo) & (y_score <= hi)
+        c = int(mask.sum())
+        count.append(c)
+        prob_pred.append(float(y_score[mask].mean()) if c else float((lo + hi) / 2))
+        prob_true.append(float(y_true[mask].mean()) if c else 0.0)
+    return prob_pred, prob_true, count
+
+
+def _lift_curve(y_true, y_score, top_percents):
+    order = np.argsort(-y_score)
+    yt = np.asarray(y_true)[order]
+    n = len(yt)
+    total_pos = int(yt.sum())
+    cap, lift = [], []
+    for pct in top_percents:
+        k = max(1, int(n * pct / 100))
+        captured = float(yt[:k].sum() / total_pos) if total_pos else 0.0
+        cap.append(captured)
+        lift.append(float(captured / (k / n)) if k else 0.0)
+    return cap, lift
+
+
+def _score_distribution(y_true, y_score, n_bins=10):
+    edges = np.round(np.linspace(0.0, 1.0, n_bins + 1), 2)
+    yt = np.asarray(y_true)
+    non_churn, churn = [], []
+    for i in range(n_bins):
+        lo, hi = edges[i], edges[i + 1]
+        mask = (y_score >= lo) & (y_score < hi) if i < n_bins - 1 else (y_score >= lo) & (y_score <= hi)
+        non_churn.append(int(((yt == 0) & mask).sum()))
+        churn.append(int(((yt == 1) & mask).sum()))
+    return [float(b) for b in edges[:-1]], non_churn, churn
+
+
+def _business_value(y_true, y_score, assumptions):
+    a = assumptions or DEFAULT_ASSUMPTIONS
+    order = np.argsort(-y_score)
+    yt = np.asarray(y_true)[order]
+    n = len(yt)
+    top_percent = [5, 10, 20]
+    target_users, value_at_risk, expected_recovery = [], [], []
+    for pct in top_percent:
+        k = max(1, int(n * pct / 100))
+        churners = int(yt[:k].sum())
+        var = churners * a["avg_revenue"]
+        recovery = var * a["save_rate"] - k * a["coupon_cost"]
+        target_users.append(k)
+        value_at_risk.append(int(var))
+        expected_recovery.append(int(recovery))
+    return {
+        "assumptions": a,
+        "top_percent": top_percent,
+        "target_users": target_users,
+        "value_at_risk": value_at_risk,
+        "expected_recovery": expected_recovery,
+    }
+
+
+def evaluate_and_save(
+    eval_dir,
+    *,
+    model_name,
+    model_key,
+    model_type,
+    user_id,
+    y_true,
+    y_score,
+    n_train,
+    training_history=None,
+    shap_summary=None,
+    business_assumptions=None,
+    split="test",
+):
+    """평가 산출물 9종을 저장하고 metrics 요약 dict를 반환한다."""
+    eval_dir = Path(eval_dir)
+    eval_dir.mkdir(parents=True, exist_ok=True)
+    y_true = np.asarray(y_true).astype(int)
+    y_score = np.asarray(y_score).astype(float)
+
+    thresholds = np.round(np.arange(0.05, 0.96, 0.05), 2)
+    prec, rec, f1 = _threshold_curve(y_true, y_score, thresholds)
+    best_i = int(np.argmax(f1))
+    best_t = float(thresholds[best_i])
+    y_pred = (y_score >= best_t).astype(int)
+
+    roc = float(roc_auc_score(y_true, y_score))
+    pr = float(average_precision_score(y_true, y_score))
+    tn, fp, fn, tp = (int(x) for x in confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel())
+
+    _dump(
+        eval_dir / "metrics_summary.json",
+        {
+            "model_name": model_name,
+            "model_key": model_key,
+            "model_type": model_type,
+            "label_name": "churn",
+            "horizon_days": 7,
+            "n_train": int(n_train),
+            "n_test": int(len(y_true)),
+            "positive_rate": float(y_true.mean()),
+            "roc_auc": roc,
+            "pr_auc": pr,
+            "best_threshold": best_t,
+            "precision": prec[best_i],
+            "recall": rec[best_i],
+            "f1": f1[best_i],
+            "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
+        },
+    )
+
+    _dump(
+        eval_dir / "threshold_curve.json",
+        {"threshold": [float(t) for t in thresholds], "precision": prec, "recall": rec, "f1": f1},
+    )
+
+    prob_pred, prob_true, cal_count = _calibration(y_true, y_score)
+    _dump(
+        eval_dir / "calibration_curve.json",
+        {"prob_pred": prob_pred, "prob_true": prob_true, "count": cal_count},
+    )
+
+    top_percents = [1, 5, 10, 20, 30]
+    cap, lift = _lift_curve(y_true, y_score, top_percents)
+    _dump(eval_dir / "lift_curve.json", {"top_percent": top_percents, "capture_rate": cap, "lift": lift})
+
+    bins, non_churn, churn = _score_distribution(y_true, y_score)
+    _dump(
+        eval_dir / "score_distribution.json",
+        {"bins": bins, "non_churn_count": non_churn, "churn_count": churn},
+    )
+
+    _dump(
+        eval_dir / "training_history.json",
+        training_history or {"epoch": [], "train_loss": [], "val_loss": []},
+    )
+
+    if shap_summary is not None:
+        _dump(eval_dir / "shap_summary.json", shap_summary)
+
+    _dump(eval_dir / "business_value.json", _business_value(y_true, y_score, business_assumptions))
+
+    pd.DataFrame(
+        {
+            "user_id": np.asarray(user_id).astype("int64"),
+            "y_true": y_true.astype("int32"),
+            "y_score": y_score.astype("float64"),
+            "y_pred": y_pred.astype("int32"),
+            "split": split,
+            "threshold": best_t,
+            "model_name": model_name,
+        }
+    ).to_parquet(eval_dir / "eval_predictions.parquet", index=False)
+
+    return {
+        "roc_auc": roc,
+        "pr_auc": pr,
+        "best_threshold": best_t,
+        "best_f1": f1[best_i],
+        "precision": prec[best_i],
+        "recall": rec[best_i],
+        "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
+    }
