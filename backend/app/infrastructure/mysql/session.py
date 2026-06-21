@@ -140,7 +140,7 @@ class PredictionRepository:
         return next((x for x in reversed(_mem["predictions"]) if x["user_id"] == user_id), None)
 
     def top_risk(self, limit=20, min_prob=0.0):
-        """고위험 유저 목록(향후 7일 이탈확률 내림차순). 유저별 최신 1건 기준."""
+        """고위험 유저 목록(향후 7일 이내 이탈 확률 내림차순). 유저별 최신 1건 기준."""
         if mode() == "mysql":
             return _q("""SELECT p.* FROM prediction_log p
                          JOIN (SELECT user_id, MAX(prediction_id) mid

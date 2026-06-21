@@ -27,7 +27,7 @@ def get_latest(user_id: str) -> dict:
 def get_top_risk(limit: int = 20, min_prob: float = 0.0) -> dict:
     rows = prediction_repository.top_risk(limit=limit, min_prob=min_prob)
     return {"count": len(rows), "horizon_days": 7,
-            "title": "향후 7일 이탈 확률 고위험 유저", "users": rows}
+            "title": "향후 7일 이내 이탈 확률 고위험 유저", "users": rows}
 
 
 def run_ensemble(members: list) -> dict:

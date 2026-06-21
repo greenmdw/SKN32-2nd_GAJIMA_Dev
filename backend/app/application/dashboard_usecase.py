@@ -22,7 +22,7 @@ def get_dashboard_summary() -> dict:
     return {"best_model": best["model"] if best else None,
             "best_auc": best["roc_auc"] if best else None,
             "models": tab, "label": "churn", "horizon_days": 7,
-            "title": "향후 7일 이탈 확률"}
+            "title": "향후 7일 이내 이탈 확률"}
 
 
 def get_model_charts(model: str, name: str) -> dict:

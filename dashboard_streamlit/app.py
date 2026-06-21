@@ -20,7 +20,7 @@ def main():
 
     st.markdown(f'<div class="logo">{layout.logo_svg()}</div>', unsafe_allow_html=True)
     st.title("Anchor")
-    st.caption("실시간 고객 이탈 분석 시스템 · 향후 7일 이탈확률")
+    st.caption("실시간 고객 이탈 분석 시스템 · 향후 7일 이내 이탈 확률")
 
     if st.session_state.get("is_logged_in"):
         st.success(f"로그인됨: {st.session_state.get('display_name','-')} ({st.session_state.get('role')})")
