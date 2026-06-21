@@ -23,14 +23,15 @@ def write_manifest(
     is_active_candidate=True,
 ):
     eval_dir = Path(eval_dir)
+    # evaluation.* 경로는 레포 루트 기준 상대경로로 박아둔다(백엔드가 그대로 읽음).
     base = f"data/processed/evaluation/churn/{model_key}"
     manifest = {
         "model_name": model_name,
         "model_key": model_key,
         "model_type": model_type,
-        "label_name": "churn",
-        "horizon_days": 7,
-        "feature_schema_version": "v2",
+        "label_name": "churn",      # 운영 라벨 고정(19-3 §1)
+        "horizon_days": 7,          # 향후 7일 이탈
+        "feature_schema_version": "v2",  # 현재 데이터가 22피처 v2이므로 고정. v1로 돌아가면 수정
         "input_train_path": input_train,
         "input_test_path": input_test,
         "dataset_path": input_train,

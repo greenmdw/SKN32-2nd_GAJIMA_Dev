@@ -1,0 +1,38 @@
+{
+  "feature": [
+    "ndays",
+    "tenure_days",
+    "recency_days",
+    "std_price",
+    "n_events",
+    "n_view",
+    "brand_loyalty",
+    "n_brands",
+    "cat_entropy",
+    "n_categories"
+  ],
+  "mean_abs_shap": [
+    0.7697,
+    0.1382,
+    0.0725,
+    0.0076,
+    0.0068,
+    0.0053,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "rank": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ]
+}

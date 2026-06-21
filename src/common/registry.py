@@ -16,7 +16,11 @@ EVAL_ROOT = ROOT / "data" / "processed" / "evaluation" / "churn"
 
 
 def resolve_dirs(model_key, run_tag):
-    """run_tag 유무에 따라 (artifact_dir, eval_dir)를 만들어 반환."""
+    """run_tag 유무에 따라 (artifact_dir, eval_dir)를 만들어 반환.
+
+    run_tag=None  -> 정식(canonical) 경로 = 백엔드 제출용 베스트 슬롯.
+    run_tag="..." -> runs/{tag}/ 실험 경로(덮어쓰기 방지, 튜닝 비교용).
+    """
     if run_tag:
         artifact_dir = MODELS_ROOT / model_key / "runs" / run_tag
         eval_dir = EVAL_ROOT / model_key / "runs" / run_tag

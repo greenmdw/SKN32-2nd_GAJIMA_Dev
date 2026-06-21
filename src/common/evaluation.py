@@ -116,18 +116,27 @@ def evaluate_and_save(
     business_assumptions=None,
     split="test",
 ):
-    """평가 산출물 9종을 저장하고 metrics 요약 dict를 반환한다."""
+    """평가 산출물 9종을 저장하고 metrics 요약 dict를 반환한다.
+
+    산출물 ↔ 대시보드 차트 매핑:
+      metrics_summary(#4,#10) · threshold_curve(#9) · calibration_curve(#12) ·
+      lift_curve(#11) · score_distribution(#8) · shap_summary(#13) ·
+      business_value(#14,#15) · training_history(#5) · eval_predictions(#6,#7 재계산 원천)
+    """
     eval_dir = Path(eval_dir)
     eval_dir.mkdir(parents=True, exist_ok=True)
     y_true = np.asarray(y_true).astype(int)
     y_score = np.asarray(y_score).astype(float)
 
+    # 임계값: 0.05~0.95를 0.05 간격으로 훑어 F1이 최대인 지점을 운영 임계값으로 채택.
+    # 주의: PR-AUC/ROC는 임계값 무관(모델 품질), precision/recall/f1/confusion은 이 임계값 기준값.
     thresholds = np.round(np.arange(0.05, 0.96, 0.05), 2)
     prec, rec, f1 = _threshold_curve(y_true, y_score, thresholds)
     best_i = int(np.argmax(f1))
     best_t = float(thresholds[best_i])
     y_pred = (y_score >= best_t).astype(int)
 
+    # PR-AUC = average_precision, ROC-AUC = roc_auc_score (둘 다 임계값 무관 = 순위 품질).
     roc = float(roc_auc_score(y_true, y_score))
     pr = float(average_precision_score(y_true, y_score))
     tn, fp, fn, tp = (int(x) for x in confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel())

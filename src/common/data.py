@@ -66,7 +66,12 @@ V2_FILE = {
 
 
 def make_scaler(name):
-    """전처리 config의 scaler 이름 -> sklearn 변환기 (none은 None)."""
+    """전처리 config의 scaler 이름 -> sklearn 변환기 (none은 None).
+
+    리뷰 노트: 트리(XGB/DT/RF)는 스케일 불변이라 robust/none 결과가 같다. 그래도 변환기를
+    fit해 preprocessor.joblib로 저장하는 이유는, 백엔드 실시간 서빙이 학습과 동일한 변환을
+    적용해야 하기 때문(선형 모델 LogReg에는 실제로 영향을 줌).
+    """
     return {
         "none": None,
         "robust": RobustScaler(),
@@ -96,15 +101,19 @@ def load_sequence(path):
 def load_tabular_v2(model_key):
     """v2 22피처 로드 -> (X_tr, y_tr, uid_tr), (X_te, y_te, uid_te).
 
-    train: models7/{Model}_v2_train.parquet (recency<=7 코호트)
-    test : test_tabular_v2.parquet 에서 cohort_recency7==1 로 코호트 필터
+    train: models7/{Model}_v2_train.parquet — 이미 recency<=7 코호트만 들어있음.
+    test : test_tabular_v2.parquet 는 전체(298k)라 cohort_recency7==1 로 코호트 필터해야
+           train과 같은 모집단(recency<=7)이 된다.
+    ★ 이 필터를 빠뜨리면 OOT 평가가 쉬워져(이탈 명백한 유저 포함) 점수가 부풀려진다.
     """
-    name = V2_FILE[model_key]
+    name = V2_FILE[model_key]  # decisiontree -> "DecisionTree" 식 파일 접두어
     tr = pd.read_parquet(V2_MODELS7 / f"{name}_v2_train.parquet")
     te = pd.read_parquet(V2_DIR / "test_tabular_v2.parquet")
-    te = te[te["cohort_recency7"] == 1]
+    te = te[te["cohort_recency7"] == 1]  # 코호트 필터 — train과 동일 모집단 맞추기
 
     def split(df):
+        # 22 feature는 float64, target(churn)=int32, user_id=int64.
+        # user_id는 식별자라 feature에 넣지 않는다(19-3).
         return (
             df[FEATURE_ORDER_V2].astype("float64"),
             df[TARGET].astype("int32"),

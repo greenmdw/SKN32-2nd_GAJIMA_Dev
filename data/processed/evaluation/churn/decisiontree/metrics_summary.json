@@ -1,0 +1,21 @@
+{
+  "model_name": "DecisionTree_Churn_v2",
+  "model_key": "decisiontree",
+  "model_type": "tree",
+  "label_name": "churn",
+  "horizon_days": 7,
+  "n_test": 109736,
+  "positive_rate": 0.833,
+  "roc_auc": 0.7754,
+  "pr_auc": 0.9266,
+  "best_threshold": 0.42,
+  "f1": 0.9137,
+  "brier": 0.116,
+  "ece": 0.0349,
+  "confusion_matrix": {
+    "tn": 1536,
+    "fp": 16793,
+    "fn": 390,
+    "tp": 91017
+  }
+}

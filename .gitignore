@@ -10,9 +10,3 @@ models/*.pkl
 !models/churn_model.joblib
 
 # 팀 제공 문서 / 데이터 (커밋 제외)
-md파일/
-전처리설명서/
-data/
-processed_5m/
-archive/
-notebooks/
