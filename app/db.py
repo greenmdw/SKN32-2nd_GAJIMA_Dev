@@ -50,9 +50,15 @@ def available():
 
 def init_db():
     db = os.environ.get("MYSQL_DATABASE", "anchor")
-    c = _conn(with_db=False); cur = c.cursor()
-    cur.execute(f"CREATE DATABASE IF NOT EXISTS {db} CHARACTER SET utf8mb4")
-    cur.execute(f"USE {db}")
+    # 기존 DB(project2db)면 직접 연결, 없을 때만 생성 시도(제한권한 사용자 대응)
+    try:
+        c = _conn(with_db=True)
+    except Exception:
+        c0 = _conn(with_db=False); cur0 = c0.cursor()
+        cur0.execute(f"CREATE DATABASE IF NOT EXISTS {db} CHARACTER SET utf8mb4")
+        c0.commit(); cur0.close(); c0.close()
+        c = _conn(with_db=True)
+    cur = c.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS face_user(
         user_id VARCHAR(64) PRIMARY KEY, display_name VARCHAR(100), role VARCHAR(16) DEFAULT 'customer',
         embedding LONGBLOB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB""")
