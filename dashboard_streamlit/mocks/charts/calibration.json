@@ -1,0 +1,1 @@
+{"chart_name":"calibration","chart_type":"line","title":"Calibration","x":"prob_pred","y":"prob_true","data":[{"prob_pred":0.1,"prob_true":0.12,"count":1000},{"prob_pred":0.9,"prob_true":0.88,"count":500}],"meta":{"schema_version":"chart.v1","source":"mock"}}
