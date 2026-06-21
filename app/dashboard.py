@@ -1,0 +1,181 @@
+# -*- coding: utf-8 -*-
+"""Anchor 대시보드 — 개요(모델 비교) + 모델 진단(15시각화) + 추천 + 고객조회 + 관리자로그. chart_service가 eval 산출물 렌더."""
+import streamlit as st
+import pandas as pd
+from app.services import chart_service as cs
+from app import db as adb
+
+
+def _show(chart, msg="데이터 없음(eval 산출물 확인)"):
+    if chart is None:
+        st.info(msg)
+    else:
+        st.altair_chart(chart, use_container_width=True)
+
+
+def render_overview():
+    st.subheader("개요 — 7모델 한눈 비교")
+    k = cs.kpi()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("최고 모델 (ROC-AUC)", f"{k.get('best_model','-')}", f"{k.get('best_auc','-')}")
+    c2.metric("고위험 고객 (p≥0.65)", f"{k.get('n_high','-'):,}" if k.get('n_high') is not None else "-",
+              f"/ {k.get('n_users','-'):,}명" if k.get('n_users') else "")
+    c3.metric("기대 이탈매출 (위험)", f"{k.get('rev_at_risk','-'):,.0f}" if k.get('rev_at_risk') is not None else "-")
+
+    st.markdown("**모델 비교표** (ROC-AUC 정렬 · Brier/ECE 낮을수록 좋음)")
+    df = cs.comparison_table()
+    if not df.empty:
+        st.dataframe(df.style.highlight_max(subset=["ROC_AUC", "PR_AUC", "Recall", "F1"], color="#D7E3F4")
+                     .highlight_min(subset=["Brier", "ECE"], color="#D7E3F4"), use_container_width=True)
+    a, b = st.columns(2)
+    with a: _show(cs.chart_auc_bar())
+    with b: _show(cs.chart_radar_like())
+    st.caption("불균형(이탈 82%)이라 PR-AUC는 높게 나옴 → 분별력은 ROC-AUC가 주지표. Recall은 운영 임계값 기준.")
+
+
+def render_diagnostics():
+    st.subheader("Model Diagnostics — 15 시각화")
+    models = cs.model_list()
+    sel = st.multiselect("비교할 모델(곡선)", models, default=models[:3])
+    one = st.selectbox("단일 모델(분포·혼동행렬·Lift 등)", models, index=len(models) - 1)
+
+    st.markdown("#### 6·7. PR / ROC 곡선")
+    a, b = st.columns(2)
+    with a: _show(cs.chart_pr(sel))
+    with b: _show(cs.chart_roc(sel))
+
+    st.markdown("#### 12·9. Calibration / Threshold P·R·F1")
+    a, b = st.columns(2)
+    with a: _show(cs.chart_calibration(sel))
+    with b: _show(cs.chart_threshold(one))
+
+    st.markdown("#### 8·11. 이탈 스코어 분포 / Lift")
+    a, b = st.columns(2)
+    with a: _show(cs.chart_score_dist(one))
+    with b: _show(cs.chart_lift(one))
+
+    st.markdown("#### 10. Confusion Matrix (운영 임계값)")
+    cm = cs.confusion(one)
+    if cm is not None: st.table(cm)
+
+    st.markdown("#### 2. 데이터 분포")
+    col = st.selectbox("피처", ["recency_days", "n_events", "avg_price", "n_categories", "brand_loyalty"], index=0)
+    _show(cs.chart_data_distribution(col))
+
+    st.markdown("#### 13. SHAP 중요도")
+    _show(cs.chart_shap(one), "SHAP 미생성 — `pip install shap` 후 pp_eval_package 재실행 시 표시")
+
+    st.markdown("#### 14·15. Value at Risk / Revenue Recovery 시뮬")
+    a, b = st.columns([2, 1])
+    with a: _show(cs.chart_var_treemap(one))
+    with b:
+        st.caption("가정 조정")
+        sr = st.slider("캠페인 성공률", 0.05, 0.6, 0.3, 0.05)
+        cost = st.slider("1인 캠페인 비용", 0.0, 2.0, 0.1, 0.05)
+        rr = cs.revenue_recovery(one, campaign_cost=cost, success_rate=sr)
+        if rr:
+            st.metric("기대 회수매출", f"{rr['기대회수매출']:,.0f}")
+            st.metric("캠페인 비용", f"{rr['캠페인비용']:,.0f}")
+            st.metric("순효과", f"{rr['순효과']:,.0f}", delta_color="normal")
+            st.caption(f"타깃(고위험) {rr['가정']['타깃(고위험)']:,}명")
+
+    st.markdown("#### 1·3·4·5. 아키텍처 / Cohort / 베이스라인 / Loss")
+    st.info("1 아키텍처=정적 다이어그램(reports), 3 Cohort Retention=canonical 추가 시, "
+            "4 베이스라인 PR-AUC=Last-cat·GBM 대비(metrics), 5 Train/Val Loss=부스팅 per-iter·DL epoch(트리/LogReg=해당없음).")
+
+
+def render_recommendation():
+    st.subheader("추천 — 유사 카테고리(행동 동시출현)")
+    cat = cs.category_catalog()
+    if cat.empty:
+        st.info("recommendation 산출물 없음"); return
+    import pandas as pd
+    from pathlib import Path
+    sim_p = Path(cs.REC) / "category_similar.parquet"
+    if not sim_p.exists():
+        st.info("category_similar 없음"); return
+    sim = pd.read_parquet(sim_p)
+    catx = cat.copy()
+    named = catx[catx.category_code.notna()] if "category_code" in catx else catx
+    seed = st.selectbox("기준 카테고리", named.category_id.head(30).tolist(),
+                        format_func=lambda c: f"{c} ({named.set_index('category_id').loc[c,'category_code'] if c in named.category_id.values else ''})")
+    rows = sim[sim.category_id == seed].merge(cat, left_on="similar_category_id", right_on="category_id", suffixes=("", "_s"))
+    if not rows.empty:
+        st.dataframe(rows[["rank", "cosine", "similar_category_id", "category_code", "top_brand", "price_median"]], use_container_width=True)
+    else:
+        st.info("유사 카테고리 없음")
+
+
+def render_customer_churn(role="customer", login_user="demo"):
+    """고객 이탈 조회 + 고위험 자동추천 (교육과제 ④ 이탈저장 · ⑤ 추천)."""
+    st.subheader("고객 이탈 조회 · 자동 추천")
+    models = cs.model_list()
+    model = st.selectbox("모델", models, index=len(models) - 1, key="cc_model")
+    c1, c2 = st.columns(2)
+    uid_sel = c1.selectbox("고객 선택(user_id)", cs.sample_user_ids(model), key="cc_user")
+    uid_manual = c2.text_input("또는 user_id 직접 입력", "", key="cc_user_manual")  # 아이디 입력칸
+    uid = uid_manual.strip() or uid_sel
+    db_on = adb.available()
+    if not db_on:
+        st.warning("MySQL 미연결 — 조회는 되나 저장(과제④⑤)은 configs/.env 설정 후 활성됩니다.")
+    if st.button("이탈 분석 실행"):
+        u = cs.user_churn(uid, model)
+        if not u:
+            st.info("해당 고객 데이터 없음"); return
+        c1, c2, c3 = st.columns(3)
+        c1.metric("이탈 확률", f"{u['churn_prob']:.3f}")
+        c2.metric("위험 등급", {"high": "고위험", "medium": "중위험", "low": "정상"}[u["risk"]])
+        c3.metric("관심 브랜드", u["top_brand"])
+        st.write(f"**추천 액션**: {u['action']}")
+        rec = cs.recommend_for(uid, model) if u["risk"] in ("high", "medium") else None
+        if rec and rec["recommendations"]:
+            st.markdown("**고위험 자동 추천(유사 카테고리)**")
+            st.dataframe(pd.DataFrame(rec["recommendations"]), use_container_width=True)
+        if db_on:
+            try:
+                adb.save_prediction(uid, model, u["churn_prob"], u["risk"], u["action"])   # 과제④
+                if rec is not None:
+                    adb.save_recommendation(uid, rec or {"note": "no-sim"})                 # 과제⑤
+                st.success("이탈예측·추천을 MySQL에 저장했습니다. (과제 ④⑤)")
+            except Exception as e:
+                st.warning(f"DB 저장 실패: {e}")
+        else:
+            st.info("MySQL 연결 시 이탈예측·추천이 DB에 저장됩니다(과제 ④⑤).")
+
+
+def render_admin_logs():
+    st.subheader("관리자 — 로그 / 예측 이력")
+    if not adb.available():
+        st.warning("MySQL 미연결 — configs/.env 설정 시 로그/이력 표시."); return
+    a, b = st.columns(2)
+    with a:
+        st.markdown("**로그인 로그(최신, 최대 200 보존)**")
+        st.dataframe(pd.DataFrame(adb.recent_logins(20)), use_container_width=True)
+    with b:
+        st.markdown("**이탈예측 이력**")
+        st.dataframe(pd.DataFrame(adb.recent_predictions(20)), use_container_width=True)
+
+
+def render_dashboard(role="customer", login_user="demo"):
+    try:
+        adb.init_db()
+    except Exception:
+        pass  # MySQL 미연결 — 차트는 표시, DB기능은 각 패널에서 경고
+    st.title("Anchor — 실시간 고객 이탈 분석")
+    base = ["개요(Overview)", "고객 이탈 조회", "추천(Recommendation)"]
+    admin_tabs = ["모델 진단(Diagnostics)", "관리자 로그/이력"]
+    names = base + (admin_tabs if role == "admin" else [])
+    tabs = st.tabs(names)
+    with tabs[0]:
+        render_overview()
+    with tabs[1]:
+        render_customer_churn(role, login_user)
+    with tabs[2]:
+        render_recommendation()
+    if role == "admin":
+        with tabs[3]:
+            render_diagnostics()
+        with tabs[4]:
+            render_admin_logs()
+    else:
+        st.caption("ℹ 모델 진단(15시각화)·로그 이력은 **관리자 전용**입니다. (교육과제 ③)")
