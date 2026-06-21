@@ -1,30 +1,50 @@
-# 가지마 backend (Node, 19-1 클린아키)
+# 가지마 운영 백엔드 (FastAPI / Python)
 
-운영 API 서버. **추론 안 함** — 모델파트 제출(`/models/submit`) 저장, 평가 산출물 ingest, **대시보드 chart API**, 예측 로그, 추천/리텐션. 운영 DB=MySQL, 시뮬 로그=Neon(외부).
+19-2 설계 반영. **운영 정본 백엔드**. 학습(추론) 코드 없음 — 모델 레지스트리·평가 ingest·대시보드 차트 API·예측 로그를 담당한다. 점수(`churn_probability`)는 모델파트/사이드카가 제출한다.
 
-## 레이어 (19-1)
+> Node.js 백엔드(19-1)는 `team_project_churn/sample_project/backend_node/`에 보관(백업·테스트용). 가지마 운영 백엔드는 본 FastAPI다.
+
+## 구조 (클린아키텍처, 19-2 §4·§5)
 ```
-src/
-├── server.js  config.js
-├── interfaces/http/routes.js         라우트→usecase (얇음)
-├── application/usecases.js           usecase 오케스트레이션
-├── domain/rules.js                   위험등급·리텐션·앙상블(순수)
-├── infrastructure/mysql/pool.js      운영 DB repository(미설정 시 메모리)
-├── infrastructure/files/artifactStore.js  eval 산출물 reader(차트 원천)
-└── validators/schemas.js             제출 검증
-db/schema_mysql.sql  seed.sql  migrations/
+backend/
+├── app/
+│   ├── main.py                      # FastAPI 부트스트랩 + 라우터 등록
+│   ├── config.py                    # .env 로딩, MySQL/임계값
+│   ├── interfaces/http/             # 라우터(얇게) + API키 의존성
+│   ├── schemas/                     # Pydantic 요청 모델
+│   ├── application/                 # usecase(도메인+repo 조립)
+│   ├── domain/                      # 위험등급·리텐션·앙상블(순수)
+│   ├── infrastructure/mysql/        # repository(+memory 폴백)
+│   ├── infrastructure/files/        # eval 산출물 reader(차트 원천)
+│   └── validators/                  # 제출 payload 검증
+├── db/schema_mysql.sql · migrate.py # 15테이블
+└── scripts/submit_models.py         # 7모델 일괄 제출(26-9 P1)
 ```
-> 19-1의 파일 단위(usecase/repository 다중 파일)를 **데드라인 위해 레이어별 모듈로 압축**. 의존 방향(route→usecase→domain/port→infra)은 동일. 추후 파일 분리 가능.
 
 ## 실행
+```bash
+# 가지마 .venv 사용(streamlit과 공유)
+.venv/Scripts/python -m pip install -r backend/requirements.txt
+cp backend/.env.example backend/.env     # MYSQL_* 채우기(미설정 시 memory 데모 모드)
+.venv/Scripts/python backend/db/migrate.py
+.venv/Scripts/python -m uvicorn app.main:app --port 8090   # (cwd=backend)
+# 7모델 적재(서버 기동 후)
+.venv/Scripts/python backend/scripts/submit_models.py
 ```
-node scripts/check.js     # 무설치 검증
-node src/server.js        # http://localhost:8090 (MySQL 없으면 메모리 모드, 차트는 파일 원천)
-```
-운영: `.env`(MySQL_*, API_KEY) 설정 + `npm i mysql2 dotenv` 후 schema_mysql.sql 적용.
+Swagger 문서: `http://127.0.0.1:8090/docs`
 
-## API (x-api-key, /health 제외)
-`/health` · `POST /models/submit` · `GET /models` · `GET /dashboard/summary` · `GET /models/:model/charts/:name`(roc/pr/threshold/calibration/shap) · `POST /predict` · `POST /ensemble/run`.
+## API (19-2 §8)
+| Endpoint | Method | 책임 |
+| --- | --- | --- |
+| `/health` | GET | 상태(인증 불필요) |
+| `/models/submit` | POST | 모델/평가 등록 |
+| `/models` · `/models/active` | GET | 모델 목록 |
+| `/models/{id}/evaluation` | GET | 평가 요약 |
+| `/models/{model}/charts/{name}` | GET | roc/pr/threshold/calibration/shap(→feature_importance 폴백) |
+| `/dashboard/summary` | GET | 7모델 비교 요약 |
+| `/predict` | POST | 점수→위험등급·리텐션·로그 |
+| `/predictions/latest` | GET | 유저 최신 예측 |
+| `/predictions/top-risk` | GET | 고위험 유저(향후 7일 이탈확률 desc) |
+| `/ensemble/run` | POST | 다모델 조합 |
 
-## 원칙
-추론·torch 번들 없음. 대용량은 파일+경로. Streamlit은 이 REST만 호출(직접 DB 금지). 차트 원천=학습 종료 시 eval 산출물.
+인증: `/health` 외 전 엔드포인트 `x-api-key` 헤더 필요(.env `API_KEY`).

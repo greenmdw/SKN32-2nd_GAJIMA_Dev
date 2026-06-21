@@ -1,0 +1,4 @@
+risk_high: 0.65
+risk_low: 0.35
+horizon_days: 7
+session_bounce_idle_min: 30

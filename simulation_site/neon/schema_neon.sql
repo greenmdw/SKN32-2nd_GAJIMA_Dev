@@ -1,0 +1,2 @@
+-- 시뮬 로그 전용(Neon Postgres). 운영 DB(MySQL)와 분리. (골격 — 추후 작성)
+-- CREATE TABLE sim_event_log ( ... );
