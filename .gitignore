@@ -19,3 +19,6 @@ models/sequence/
 
 node_modules/
 **/node_modules/
+
+models/
+*.zip
