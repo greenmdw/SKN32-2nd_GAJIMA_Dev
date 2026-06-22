@@ -12,12 +12,21 @@ def _render_face_preview(camera_file, mode: str):
 
     image_bytes = camera_file.getvalue()
     result = detect_largest_face(image_bytes)
+
     if not result.detected:
         st.error("얼굴을 찾지 못했습니다. 밝은 곳에서 얼굴 전체가 보이게 다시 촬영해주세요.")
         return None
 
-    st.image(result.preview_bytes, caption=f"{mode} 얼굴 검출 완료", use_container_width=True)
-    st.success("OpenCV 얼굴 검출 성공. 백엔드에서 512d 임베딩, L2 정규화, 저장/비교를 진행합니다.")
+    st.image(
+        result.preview_bytes,
+        caption=f"{mode} 얼굴 검출 완료",
+        use_container_width=True
+    )
+
+    st.success(
+        f"InsightFace 얼굴 검출 성공 (신뢰도 {result.score:.1%})"
+    )
+
     return result
 
 
