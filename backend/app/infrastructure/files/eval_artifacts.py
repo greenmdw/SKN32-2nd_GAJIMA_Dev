@@ -6,6 +6,7 @@ import json
 from app.config import EVAL_DIR
 
 CHURN_DIR = EVAL_DIR / "churn"
+FALLBACK_CHURN_DIR = EVAL_DIR / "_fallback" / "churn"   # primary 파일 없을 때 대체(이전 산출물)
 
 # 모델명 → model_key (19-3)
 KEY = {"catboost": "catboost", "lightgbm": "lightgbm", "xgboost": "xgboost",
@@ -29,7 +30,11 @@ def resolve_key(model):
 
 
 def _artifact(mkey, fname):
-    return _json(CHURN_DIR / mkey / fname)
+    """primary(모델팀 최신 산출물) 우선, 없으면 _fallback(이전 산출물) 사용."""
+    p = CHURN_DIR / mkey / fname
+    if not p.exists():
+        p = FALLBACK_CHURN_DIR / mkey / fname
+    return _json(p)
 
 
 def _wrap(chart_name, chart_type, x, y, data, model=None, source="artifact", **extra):
@@ -106,6 +111,27 @@ def model_chart(model, chart_name):
 
 def model_metrics(model):
     return _artifact(resolve_key(model), "metrics_summary.json")
+
+
+def all_metrics():
+    """전 모델 metrics를 per-model 산출물(primary→_fallback)에서 정규화해 모음.
+    요약·드롭다운·베이스라인이 이 단일 소스를 쓴다(모델팀 값 우선, 없으면 폴백)."""
+    out = {}
+    for name, mkey in NAME.items():
+        m = _artifact(mkey, "metrics_summary.json")
+        if not m:
+            continue
+        auc = m.get("roc_auc", m.get("auc", m.get("val_auc")))
+        if auc is None:
+            continue
+        out[name] = {
+            "auc": auc, "pr_auc": m.get("pr_auc"), "f1": m.get("f1"),
+            "threshold": m.get("best_threshold", m.get("threshold")),
+            "brier": m.get("brier"), "ece": m.get("ece"),
+            "n": m.get("n_test", m.get("n")),
+            "val_only": m.get("pr_auc") is None,        # 시퀀스(Transformer) 등 test 미산출
+        }
+    return out
 
 
 def has_artifacts(model):

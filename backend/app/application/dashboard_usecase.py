@@ -1,28 +1,45 @@
 # -*- coding: utf-8 -*-
-"""application — 대시보드 요약/차트 usecase(19-2 §9.3). 차트 원천=학습 산출물 파일."""
+"""application — 대시보드 요약/차트 usecase(19-2 §9.3 / 19-7-1 §5.2).
+요약은 운영 KPI(active 모델·예측수·고위험수·평균확률·최신시각·회복매출). 모델 비교표는
+별도 차트(/dashboard/charts/baseline-comparison)에서 제공한다."""
 from app.infrastructure.files import artifact_store as art
+from app.infrastructure.files import eval_artifacts as ea
+from app.infrastructure.mysql.session import prediction_repository, model_repository
+
+
+def _active_model_name():
+    """active 모델명(짧은 이름). 미등록 시 per-model 산출물 중 best로 폴백."""
+    try:
+        rows = model_repository.active()
+        if rows:
+            return str(rows[0].get("model_name", "")).replace("_Churn_v2", "").replace("_v2", "") or None
+    except Exception:
+        pass
+    m = ea.all_metrics()
+    return max(m, key=lambda k: m[k]["auc"]) if m else None
+
+
+def _expected_revenue_recovery(model) -> float:
+    """active 모델 business_value.json의 회복 가능 매출(가장 넓은 타겟 기준)."""
+    if not model:
+        return 0.0
+    bv = ea._artifact(ea.resolve_key(model), "business_value.json")
+    if bv and bv.get("expected_recovery"):
+        return float(round(max(bv["expected_recovery"]), 2))
+    return 0.0
 
 
 def get_dashboard_summary() -> dict:
-    """관리자 요약: 모델 비교표(파일 원천 metrics_summary.json)."""
-    m = art.metrics()
-    tab = []
-    for k, v in m.items():
-        if not isinstance(v, dict):
-            continue
-        auc = v.get("auc", v.get("val_auc"))           # Transformer 는 val_auc
-        if auc is None:
-            continue
-        tab.append({"model": k, "roc_auc": auc, "pr_auc": v.get("pr_auc"),
-                    "brier": v.get("brier"), "ece": v.get("ece"),
-                    "f1": v.get("f1"), "threshold": v.get("threshold"),
-                    "val_only": "val_auc" in v})
-    tab.sort(key=lambda x: x["roc_auc"], reverse=True)
-    best = tab[0] if tab else None
-    return {"best_model": best["model"] if best else None,
-            "best_auc": best["roc_auc"] if best else None,
-            "models": tab, "label": "churn", "horizon_days": 7,
-            "title": "향후 7일 이내 이탈 확률"}
+    """운영 요약 KPI (19-7-1 §5.2 계약 필드)."""
+    active = _active_model_name()
+    s = prediction_repository.summary_stats()
+    return {"active_model": active,
+            "total_predictions": s["total"],
+            "high_risk_count": s["high_risk"],
+            "avg_churn_probability": s["avg"],
+            "latest_prediction_at": s["latest_at"],
+            "expected_revenue_recovery": _expected_revenue_recovery(active),
+            "label": "churn", "horizon_days": 7}
 
 
 def get_model_charts(model: str, name: str) -> dict:

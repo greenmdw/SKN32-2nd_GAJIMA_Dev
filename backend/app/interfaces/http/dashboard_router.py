@@ -29,6 +29,23 @@ async def dashboard_user(user_id: str):
     return ok(unwrap(cu.get_user_dashboard(user_id)))
 
 
+@router.get("/dashboard/models")
+async def dashboard_models():
+    """드롭다운용 모델 목록(짧은 이름)."""
+    return ok(cu.get_model_names())
+
+
+@router.get("/samples/users")
+async def sample_users(model: str = "CatBoost", n: int = 60):
+    return ok(cu.get_sample_users(model, n))
+
+
+@router.get("/session-bounce")
+async def session_bounce():
+    """실시간 세션 바운스 메타 + 샘플 세션."""
+    return ok(cu.get_session_bounce())
+
+
 @router.get("/recommendations/{user_id}")
 async def recommendations(user_id: str):
     return ok(cu.get_recommendations(user_id))
@@ -42,3 +59,11 @@ async def retention_action(body: RetentionActionIn):
 @router.post("/ensemble/run")
 async def ensemble_run(body: EnsembleIn):
     return ok(puc.run_ensemble([m.model_dump() for m in body.members]))
+
+
+@router.post("/internal/cleanup")
+async def internal_cleanup():
+    """보존정책 수동 실행(ops). 평소엔 스케줄러가 주기 실행."""
+    from app.infrastructure.mysql import retention
+    from app.application import sim_usecase
+    return ok({"db_retention": retention.cleanup_db(), "sessions_swept": sim_usecase.sweep_sessions()})

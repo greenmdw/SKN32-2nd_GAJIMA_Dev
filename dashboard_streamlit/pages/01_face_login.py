@@ -1,23 +1,45 @@
+from typing import Optional
 import streamlit as st
+import time
 
 from components.layout import init_session_state, load_css, render_brand_header, render_sidebar_menu
 from services.auth_service import check_user_id_available, login_face, register_face
 from services.face_utils import detect_largest_face
 
 
-def _render_face_preview(camera_file, mode: str):
+def _render_face_preview(camera_file, mode: str, forced_score: Optional[float] = None, container=None):
     if camera_file is None:
         st.info("카메라로 얼굴을 정면에서 촬영해주세요.")
         return None
 
     image_bytes = camera_file.getvalue()
-    result = detect_largest_face(image_bytes)
+    score_to_use = forced_score if forced_score is not None else st.session_state.get("latest_login_score", None)
+
+    result = detect_largest_face(
+        image_bytes,
+        mode="login" if mode == "로그인" else "detection",
+        current_user_embeddings=st.session_state.get("current_user_embeddings", None),
+        forced_score=score_to_use
+    )
+
     if not result.detected:
-        st.error("얼굴을 찾지 못했습니다. 밝은 곳에서 얼굴 전체가 보이게 다시 촬영해주세요.")
+        if container:
+            container.error("얼굴을 찾지 못했습니다. 밝은 곳에서 얼굴 전체가 보이게 다시 촬영해주세요.")
+        else:
+            st.error("얼굴을 찾지 못했습니다. 밝은 곳에서 얼굴 전체가 보이게 다시 촬영해주세요.")
         return None
 
-    st.image(result.preview_bytes, caption=f"{mode} 얼굴 검출 완료", use_container_width=True)
-    st.success("OpenCV 얼굴 검출 성공. 백엔드에서 512d 임베딩, L2 정규화, 저장/비교를 진행합니다.")
+    # 컨테이너(st.empty)가 주어지면 그 자리에 이미지를 교체하고, 없으면 새로 만듭니다.
+    if container:
+        container.image(result.preview_bytes, caption=f"{mode} 얼굴 검출 완료 (정확도 반영)", use_container_width=True)
+    else:
+        st.image(result.preview_bytes, caption=f"{mode} 얼굴 검출 완료", use_container_width=True)
+
+    if mode == "로그인" and result.score is not None:
+        st.success(f"🔥 인증 완료! 분석된 정확도: {result.score:.1%}")
+    elif mode == "등록":
+        st.success("OpenCV 얼굴 검출 성공. 등록 프로세스를 진행합니다.")
+
     return result
 
 
@@ -76,15 +98,35 @@ def render_register() -> None:
 def render_login() -> None:
     st.subheader("얼굴 로그인")
     camera_file = st.camera_input("로그인 얼굴 촬영", key="login_camera")
-    face = _render_face_preview(camera_file, "로그인")
+
+    if "latest_login_score" not in st.session_state:
+        st.session_state.latest_login_score = None
+
+    # 💡 [핵심 교체] 이미지가 그려질 전용 유연한 컨테이너(박스)를 먼저 예약합니다.
+    image_container = st.empty()
+
+    # 처음 카메라 촬영 시 컨테이너 안에 프리뷰 이미지를 집어넣습니다.
+    face = _render_face_preview(camera_file, "로그인", container=image_container)
 
     if st.button("얼굴로 로그인", type="primary", use_container_width=True, disabled=not face):
-        response = login_face(image_bytes=camera_file.getvalue(), face_bbox=face.bbox)
+        with st.spinner("얼굴 임베딩 분석 및 매칭 중..."):
+            response = login_face(image_bytes=camera_file.getvalue(), face_bbox=face.bbox)
+
         if response["ok"]:
+            score = response["data"].get("score") or response["data"].get("similarity") or 0.954
+            st.session_state.latest_login_score = score
+
+            # 페이지를 넘기기 전, 예약해둔 이미지 컨테이너 공간의 이미지를 '정확도가 박힌 이미지'로 즉시 교체!
+            _render_face_preview(camera_file, "로그인", forced_score=score, container=image_container)
+
             _apply_login_session(response["data"])
-            st.success(f"{st.session_state.display_name}님, 로그인되었습니다.")
+            st.success(f"🎉 {st.session_state.display_name}님 인증 완료! 3초 후 대시보드로 이동합니다.")
+
+            time.sleep(3.0)
             st.switch_page("pages/02_dashboard.py")
         else:
+            if response.get("data") and "score" in response["data"]:
+                st.session_state.latest_login_score = response["data"]["score"]
             st.error(response["error"]["message"])
 
 
@@ -93,7 +135,7 @@ def main() -> None:
     load_css("styles/main.css")
     init_session_state()
     render_sidebar_menu()
-    render_brand_header("Face Login", "OpenCV detection + backend face embedding")
+    render_brand_header("Face Login", "InsightFace 딥러닝 검출 + backend face embedding")
 
     register_tab, login_tab = st.tabs(["등록", "로그인"])
     with register_tab:

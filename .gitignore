@@ -19,3 +19,14 @@ models/sequence/
 
 node_modules/
 **/node_modules/
+
+models/
+*.zip
+# 임시 로그·로컬 작업 파일(업로드 제외)
+.tmp_*
+*.err.log
+RULE.md
+/plans/
+/backups/
+.vscode/
+.idea/

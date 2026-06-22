@@ -38,6 +38,14 @@ class PredictIn(BaseModel):
     model_id: Optional[int] = None
 
 
+class RealtimePredictIn(BaseModel):
+    user_id: str
+    model: Optional[str] = "CatBoost"
+    model_id: Optional[int] = None
+
+    model_config = {"protected_namespaces": ()}
+
+
 class EnsembleMember(BaseModel):
     model_id: Optional[int] = None
     prob: float

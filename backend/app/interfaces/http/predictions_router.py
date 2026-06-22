@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends, Query
 from app.interfaces.http.deps import require_api_key, unwrap
 from app.interfaces.http.responses import ok
-from app.schemas.model_submit_schema import PredictIn
+from app.schemas.model_submit_schema import PredictIn, RealtimePredictIn
 from app.application import predict_usecase as uc
+from app.application import realtime_usecase as rt
 
 router = APIRouter(tags=["predictions"], dependencies=[Depends(require_api_key)])
 
@@ -12,6 +13,12 @@ router = APIRouter(tags=["predictions"], dependencies=[Depends(require_api_key)]
 @router.post("/predict")
 async def predict(body: PredictIn):
     return ok(uc.predict_from_score(body.user_id, body.churn_probability, body.model_id))
+
+
+@router.post("/predict/realtime")
+async def predict_realtime(body: RealtimePredictIn):
+    """유저 v2 피처 → prep 번들 직접 추론(점수 caller 불필요)."""
+    return ok(unwrap(rt.predict_realtime(body.user_id, body.model or "CatBoost", body.model_id)))
 
 
 @router.get("/predictions/latest")

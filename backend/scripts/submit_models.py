@@ -44,18 +44,33 @@ def main():
     ap.add_argument("--key", default="anchor-dev-key")
     args = ap.parse_args()
 
-    metrics = json.loads((EVAL / "metrics_summary.json").read_text(encoding="utf-8"))
-    best_name = max((k for k, v in metrics.items() if isinstance(v, dict) and v.get("auc")),
-                    key=lambda k: metrics[k]["auc"])
+    agg = json.loads((EVAL / "metrics_summary.json").read_text(encoding="utf-8"))
+
+    def per_model(name):
+        """per-model 산출물(primary→_fallback) 우선, 없으면 집계본. 모델팀 값과 일치."""
+        mkey = name.lower()
+        for p in (EVAL / "churn" / mkey / "metrics_summary.json",
+                  EVAL / "_fallback" / "churn" / mkey / "metrics_summary.json"):
+            if p.exists():
+                m = json.loads(p.read_text(encoding="utf-8"))
+                return {"roc_auc": m.get("roc_auc", m.get("auc", m.get("val_auc"))),
+                        "pr_auc": m.get("pr_auc"),
+                        "best_threshold": m.get("best_threshold", m.get("threshold")),
+                        "best_f1": m.get("f1"), "key": mkey}
+        v = agg.get(name, {})
+        return {"roc_auc": v.get("auc", v.get("val_auc")), "pr_auc": v.get("pr_auc"),
+                "best_threshold": v.get("threshold"), "best_f1": v.get("f1"), "key": mkey}
+
+    pm = {name: per_model(name) for name in MODEL_MAP}
+    best_name = max(pm, key=lambda k: pm[k]["roc_auc"] or 0)
 
     results = []
     for name, (mtype, artifact) in MODEL_MAP.items():
-        v = metrics.get(name, {})
-        auc = v.get("auc", v.get("val_auc"))
+        v = pm[name]; mkey = v["key"]
         # per-model 학습입력본 경로(models7). Transformer 는 시퀀스 npz.
         dataset_path = (f"data/processed/churn/models7/{name}_v2_train.parquet"
                         if mtype != "sequence"
-                        else "models/sequence/Transformer_train_seq.npz")
+                        else "data/processed/churn/models7/Transformer_train_seq.npz")
         payload = {
             "model_name": f"{name}_Churn_v2",
             "model_type": mtype,
@@ -69,14 +84,14 @@ def main():
             "dataset_path": dataset_path,
             "artifact_path": artifact,
             "metrics": {
-                "roc_auc": auc,
-                "pr_auc": v.get("pr_auc"),
-                "best_threshold": v.get("threshold"),
-                "best_f1": v.get("f1"),
+                "roc_auc": v["roc_auc"],
+                "pr_auc": v["pr_auc"],
+                "best_threshold": v["best_threshold"],
+                "best_f1": v["best_f1"],
             },
             "evaluation": {
-                "eval_predictions_path": "data/processed/evaluation/eval_predictions.parquet",
-                "shap_summary_path": "data/processed/evaluation/feature_importance.json",
+                "eval_predictions_path": f"data/processed/evaluation/churn/{mkey}/eval_predictions.parquet",
+                "shap_summary_path": f"data/processed/evaluation/churn/{mkey}/shap_summary.json",
             },
             "is_active": (name == best_name),       # 최고 AUC 모델만 active
         }

@@ -3,10 +3,12 @@
 eval_predictions/recommendation 카탈로그를 읽어 chart-ready로 변환. 캐시(lru)."""
 import json
 from functools import lru_cache
-from app.config import EVAL_DIR, REC_DIR, DATA_DIR
+from app.config import EVAL_DIR, REC_DIR, DATA_DIR, SB_DIR
 
 CHURN_DIR = DATA_DIR / "churn"
 RISK_HIGH, RISK_LOW = 0.65, 0.35
+FEATURE_ORDER_10 = ["recency_days", "tenure_days", "ndays", "n_events", "n_view", "n_cart",
+                    "n_remove_from_cart", "n_purchase", "avg_price", "purch_amt"]
 
 
 @lru_cache(maxsize=1)
@@ -23,15 +25,10 @@ def _metrics():
 
 
 def baseline_comparison():
-    """모델 비교(베이스라인): metrics_summary → 행리스트."""
-    m = _metrics(); rows = []
-    for k, v in m.items():
-        if not isinstance(v, dict):
-            continue
-        auc = v.get("auc", v.get("val_auc"))
-        if auc is None:
-            continue
-        rows.append({"model_name": k, "roc_auc": auc, "pr_auc": v.get("pr_auc"), "f1": v.get("f1")})
+    """모델 비교(베이스라인): per-model 산출물(모델팀 우선·폴백) → 행리스트."""
+    from app.infrastructure.files import eval_artifacts as ea
+    rows = [{"model_name": k, "roc_auc": v["auc"], "pr_auc": v.get("pr_auc"), "f1": v.get("f1")}
+            for k, v in ea.all_metrics().items()]
     rows.sort(key=lambda r: r["roc_auc"], reverse=True)
     return rows
 
@@ -78,6 +75,68 @@ def user_dashboard(user_id, model="CatBoost"):
             "latest_prediction": {"churn_probability": round(p, 4), "risk_level": _risk(p),
                                   "top_category": int(r.get("top_category", 0)) if "top_category" in sub.columns else None,
                                   "top_brand": (str(r.top_brand) if "top_brand" in sub.columns else None)}}
+
+
+def model_names():
+    """대시보드 드롭다운용 모델명(per-model 산출물 기준, 모델팀 우선·폴백)."""
+    from app.infrastructure.files import eval_artifacts as ea
+    m = ea.all_metrics()
+    best = max(m, key=lambda k: m[k]["auc"], default=None)
+    out = [{"model": k, "is_best": k == best, "auc": v["auc"]} for k, v in m.items()]
+    out.sort(key=lambda x: x["auc"], reverse=True)
+    return out
+
+
+def sample_users(model="CatBoost", n=60):
+    """고객 선택 드롭다운 샘플(고/중/저위험 섞음). chart_service.sample_user_ids 포팅."""
+    import pandas as pd
+    df = _preds()
+    if df.empty:
+        return []
+    d = df[df.model_name == model].sort_values("y_score", ascending=False)
+    if d.empty:
+        return []
+    mix = pd.concat([d.head(n // 2), d.tail(n // 4),
+                     d.iloc[len(d) // 2: len(d) // 2 + n // 4]])
+    return mix["user_id"].astype(str).unique().tolist()[:n]
+
+
+def session_bounce():
+    """실시간 세션 바운스 메타 + 샘플 세션(파일 서빙)."""
+    meta_p, samp_p = SB_DIR / "meta.json", SB_DIR / "sample_sessions.json"
+    meta = json.loads(meta_p.read_text(encoding="utf-8")) if meta_p.exists() else {}
+    samples = json.loads(samp_p.read_text(encoding="utf-8")) if samp_p.exists() else {}
+    return {"meta": meta, "samples": samples}
+
+
+@lru_cache(maxsize=1)
+def _tabular():
+    """실시간 추론용 피처 룩업 — train+test 정본 결합(샘플 유저는 test셋이라 둘 다 필요)."""
+    import pandas as pd
+    frames = []
+    for fn in ("train_tabular_v2.parquet", "test_tabular_v2.parquet"):
+        p = CHURN_DIR / fn
+        if p.exists():
+            frames.append(pd.read_parquet(p))
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def user_features(user_id):
+    """실시간 추론용: 유저의 v2 피처 1행(없으면 None)."""
+    df = _tabular()
+    if df.empty:
+        return None
+    try:
+        uid = int(user_id)
+    except (ValueError, TypeError):
+        uid = user_id
+    sub = df[df.user_id == uid]
+    if sub.empty:
+        return None
+    feat_cols = [c for c in df.columns if c not in ("user_id", "churn",
+                 "churn_no_purchase", "cohort_recency7", "last_brand", "last_cat_id",
+                 "top_brand", "top_category_id")]
+    return sub.iloc[[0]][feat_cols]
 
 
 def recommendations(user_id, model="CatBoost", topn=5):

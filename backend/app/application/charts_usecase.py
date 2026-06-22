@@ -33,12 +33,27 @@ def get_dashboard_chart(chart_name) -> dict:
 
 
 def get_user_dashboard(user_id) -> dict:
-    d = ds.user_dashboard(user_id)
-    if not d:
-        return {"_status": 404, "error": f"유저 데이터 없음: {user_id}"}
-    return d
+    """유저 개인 대시보드. 없으면 200 빈 객체(프론트가 '데이터 없음' 빈상태로 표시)."""
+    return ds.user_dashboard(user_id) or {}
 
 
 def get_recommendations(user_id) -> dict:
+    """추천(19-7-1 §5.4 계약): top_categories + recommendations(상품) + source."""
     rec = ds.recommendations(user_id)
-    return {"user_id": user_id, **rec}
+    cats = [{"category_id": c.get("category_id"), "category_name": c.get("name"),
+             "score": c.get("score"), "reason": "category_similarity"}
+            for c in (rec.get("categories") or [])]
+    return {"user_id": user_id, "source": "fallback:category_similarity",
+            "top_categories": cats, "recommendations": rec.get("items") or []}
+
+
+def get_model_names() -> dict:
+    return {"models": ds.model_names()}
+
+
+def get_sample_users(model="CatBoost", n=60) -> dict:
+    return {"model": model, "users": ds.sample_users(model, n)}
+
+
+def get_session_bounce() -> dict:
+    return ds.session_bounce()
