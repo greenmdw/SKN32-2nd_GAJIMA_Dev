@@ -8,3 +8,9 @@ registered_faces/*.jpeg
 face_db.npy
 models/*.pkl
 !models/churn_model.joblib
+
+# output files
+coupon_targets.csv
+coupon_output.txt
+metrics_output.txt
+model_output.txt

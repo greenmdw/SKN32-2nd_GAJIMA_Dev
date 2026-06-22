@@ -1,0 +1,50 @@
+{
+  "model_name": "XGBoost_Churn_v2",
+  "model_key": "xgboost",
+  "model_type": "tree",
+  "label_name": "churn",
+  "horizon_days": 7,
+  "feature_schema_version": "v2",
+  "dataset_path": "data/processed/churn/models7/XGBoost_v2_train.parquet",
+  "artifact_path": "models/preprocessors/prep_XGBoost_v2.joblib",
+  "preprocessing_config": {
+    "input_format": "parquet",
+    "scale": "none",
+    "feature_order": [
+      "recency_days",
+      "tenure_days",
+      "ndays",
+      "n_events",
+      "n_view",
+      "n_cart",
+      "n_remove_from_cart",
+      "n_purchase",
+      "avg_price",
+      "purch_amt"
+    ],
+    "id_column": "user_id",
+    "target_column": "churn"
+  },
+  "metrics": {
+    "roc_auc": 0.7905,
+    "pr_auc": 0.9345,
+    "best_threshold": 0.54,
+    "best_f1": 0.9178
+  },
+  "evaluation": {
+    "metrics_summary_path": "data/processed/evaluation/churn/xgboost/metrics_summary.json",
+    "roc_curve_path": "data/processed/evaluation/churn/xgboost/roc_curve.json",
+    "pr_curve_path": "data/processed/evaluation/churn/xgboost/pr_curve.json",
+    "threshold_curve_path": "data/processed/evaluation/churn/xgboost/threshold_curve.json",
+    "confusion_matrix_path": "data/processed/evaluation/churn/xgboost/confusion_matrix.json",
+    "calibration_curve_path": "data/processed/evaluation/churn/xgboost/calibration_curve.json",
+    "lift_curve_path": "data/processed/evaluation/churn/xgboost/lift_curve.json",
+    "score_distribution_path": "data/processed/evaluation/churn/xgboost/score_distribution.json",
+    "shap_summary_path": "data/processed/evaluation/churn/xgboost/shap_summary.json",
+    "value_at_risk_path": "data/processed/evaluation/churn/xgboost/value_at_risk.json",
+    "business_value_path": "data/processed/evaluation/churn/xgboost/business_value.json",
+    "training_history_path": "data/processed/evaluation/churn/xgboost/training_history.json",
+    "eval_predictions_path": "data/processed/evaluation/churn/xgboost/eval_predictions.parquet"
+  },
+  "is_active_candidate": false
+}

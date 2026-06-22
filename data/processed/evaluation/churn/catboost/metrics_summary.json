@@ -1,0 +1,21 @@
+{
+  "model_name": "CatBoost_Churn_v2",
+  "model_key": "catboost",
+  "model_type": "tree",
+  "label_name": "churn",
+  "horizon_days": 7,
+  "n_test": 109736,
+  "positive_rate": 0.833,
+  "roc_auc": 0.791,
+  "pr_auc": 0.9347,
+  "best_threshold": 0.49,
+  "f1": 0.9182,
+  "brier": 0.1107,
+  "ece": 0.0261,
+  "confusion_matrix": {
+    "tn": 3857,
+    "fp": 14472,
+    "fn": 1538,
+    "tp": 89869
+  }
+}

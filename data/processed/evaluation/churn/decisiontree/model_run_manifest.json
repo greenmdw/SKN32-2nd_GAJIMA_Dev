@@ -1,0 +1,50 @@
+{
+  "model_name": "DecisionTree_Churn_v2",
+  "model_key": "decisiontree",
+  "model_type": "tree",
+  "label_name": "churn",
+  "horizon_days": 7,
+  "feature_schema_version": "v2",
+  "dataset_path": "data/processed/churn/models7/DecisionTree_v2_train.parquet",
+  "artifact_path": "models/preprocessors/prep_DecisionTree_v2.joblib",
+  "preprocessing_config": {
+    "input_format": "parquet",
+    "scale": "none",
+    "feature_order": [
+      "recency_days",
+      "tenure_days",
+      "ndays",
+      "n_events",
+      "n_view",
+      "n_cart",
+      "n_remove_from_cart",
+      "n_purchase",
+      "avg_price",
+      "purch_amt"
+    ],
+    "id_column": "user_id",
+    "target_column": "churn"
+  },
+  "metrics": {
+    "roc_auc": 0.7754,
+    "pr_auc": 0.9266,
+    "best_threshold": 0.42,
+    "best_f1": 0.9137
+  },
+  "evaluation": {
+    "metrics_summary_path": "data/processed/evaluation/churn/decisiontree/metrics_summary.json",
+    "roc_curve_path": "data/processed/evaluation/churn/decisiontree/roc_curve.json",
+    "pr_curve_path": "data/processed/evaluation/churn/decisiontree/pr_curve.json",
+    "threshold_curve_path": "data/processed/evaluation/churn/decisiontree/threshold_curve.json",
+    "confusion_matrix_path": "data/processed/evaluation/churn/decisiontree/confusion_matrix.json",
+    "calibration_curve_path": "data/processed/evaluation/churn/decisiontree/calibration_curve.json",
+    "lift_curve_path": "data/processed/evaluation/churn/decisiontree/lift_curve.json",
+    "score_distribution_path": "data/processed/evaluation/churn/decisiontree/score_distribution.json",
+    "shap_summary_path": "data/processed/evaluation/churn/decisiontree/shap_summary.json",
+    "value_at_risk_path": "data/processed/evaluation/churn/decisiontree/value_at_risk.json",
+    "business_value_path": "data/processed/evaluation/churn/decisiontree/business_value.json",
+    "training_history_path": "data/processed/evaluation/churn/decisiontree/training_history.json",
+    "eval_predictions_path": "data/processed/evaluation/churn/decisiontree/eval_predictions.parquet"
+  },
+  "is_active_candidate": false
+}
