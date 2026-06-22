@@ -1,0 +1,110 @@
+[001/081] PR=0.936960 ROC=0.801646 depth=3 trees=250 lr=0.0359
+[002/081] PR=0.936792 ROC=0.801258 depth=2 trees=400 lr=0.03
+[003/081] PR=0.936880 ROC=0.801409 depth=2 trees=400 lr=0.045
+[004/081] PR=0.936936 ROC=0.801409 depth=4 trees=180 lr=0.03
+[005/081] PR=0.937008 ROC=0.801789 depth=4 trees=500 lr=0.025
+[006/081] PR=0.937100 ROC=0.801750 depth=4 trees=250 lr=0.025
+[007/081] PR=0.937110 ROC=0.801897 depth=5 trees=250 lr=0.02
+[008/081] PR=0.936996 ROC=0.801754 depth=6 trees=320 lr=0.025
+[009/081] PR=0.937009 ROC=0.801273 depth=2 trees=180 lr=0.08
+[010/081] PR=0.937067 ROC=0.801758 depth=4 trees=320 lr=0.0359
+[011/081] PR=0.936918 ROC=0.801349 depth=2 trees=320 lr=0.045
+[012/081] PR=0.936937 ROC=0.801643 depth=6 trees=180 lr=0.045
+[013/081] PR=0.936818 ROC=0.800838 depth=3 trees=180 lr=0.025
+[014/081] PR=0.937176 ROC=0.801830 depth=6 trees=180 lr=0.0359
+[015/081] PR=0.936655 ROC=0.800292 depth=3 trees=120 lr=0.03
+[016/081] PR=0.936893 ROC=0.801806 depth=5 trees=180 lr=0.045
+[017/081] PR=0.936234 ROC=0.799827 depth=6 trees=500 lr=0.0359
+[018/081] PR=0.936966 ROC=0.801664 depth=5 trees=320 lr=0.03
+[019/081] PR=0.936976 ROC=0.801509 depth=5 trees=120 lr=0.045
+[020/081] PR=0.937216 ROC=0.801894 depth=4 trees=500 lr=0.02
+[021/081] PR=0.937108 ROC=0.801878 depth=4 trees=320 lr=0.03
+[022/081] PR=0.936003 ROC=0.799018 depth=6 trees=500 lr=0.06
+[023/081] PR=0.936623 ROC=0.800826 depth=4 trees=320 lr=0.08
+[024/081] PR=0.936143 ROC=0.800086 depth=5 trees=500 lr=0.045
+[025/081] PR=0.936359 ROC=0.800448 depth=5 trees=180 lr=0.08
+[026/081] PR=0.936980 ROC=0.801851 depth=5 trees=400 lr=0.015
+[027/081] PR=0.937221 ROC=0.801875 depth=3 trees=250 lr=0.06
+[028/081] PR=0.937010 ROC=0.801553 depth=6 trees=400 lr=0.015
+[029/081] PR=0.937058 ROC=0.801471 depth=5 trees=250 lr=0.015
+[030/081] PR=0.937054 ROC=0.801936 depth=4 trees=320 lr=0.025
+[031/081] PR=0.936774 ROC=0.800146 depth=3 trees=180 lr=0.02
+[032/081] PR=0.936962 ROC=0.801636 depth=4 trees=120 lr=0.08
+[033/081] PR=0.936957 ROC=0.801533 depth=2 trees=400 lr=0.06
+[034/081] PR=0.937120 ROC=0.801744 depth=3 trees=120 lr=0.08
+[035/081] PR=0.937122 ROC=0.801872 depth=4 trees=180 lr=0.045
+[036/081] PR=0.936812 ROC=0.801235 depth=5 trees=120 lr=0.02
+[037/081] PR=0.936963 ROC=0.801071 depth=2 trees=500 lr=0.02
+[038/081] PR=0.936948 ROC=0.801737 depth=6 trees=180 lr=0.0359
+[039/081] PR=0.936868 ROC=0.801647 depth=4 trees=250 lr=0.06
+[040/081] PR=0.936910 ROC=0.801411 depth=5 trees=400 lr=0.0359
+[041/081] PR=0.937037 ROC=0.801556 depth=3 trees=250 lr=0.0359
+[042/081] PR=0.936837 ROC=0.801300 depth=3 trees=180 lr=0.0359
+[043/081] PR=0.936663 ROC=0.800974 depth=5 trees=320 lr=0.06
+[044/081] PR=0.936640 ROC=0.800117 depth=2 trees=320 lr=0.02
+[045/081] PR=0.936851 ROC=0.800232 depth=2 trees=180 lr=0.0359
+[046/081] PR=0.936546 ROC=0.799781 depth=3 trees=120 lr=0.025
+[047/081] PR=0.936816 ROC=0.801742 depth=5 trees=120 lr=0.06
+[048/081] PR=0.936107 ROC=0.798780 depth=3 trees=120 lr=0.02
+[049/081] PR=0.936833 ROC=0.801524 depth=2 trees=500 lr=0.045
+[050/081] PR=0.936991 ROC=0.801319 depth=5 trees=120 lr=0.025
+[051/081] PR=0.936829 ROC=0.801662 depth=6 trees=180 lr=0.0359
+[052/081] PR=0.936520 ROC=0.799915 depth=2 trees=400 lr=0.015
+[053/081] PR=0.936639 ROC=0.800730 depth=6 trees=320 lr=0.0359
+[054/081] PR=0.936963 ROC=0.801215 depth=4 trees=250 lr=0.015
+[055/081] PR=0.937089 ROC=0.801721 depth=4 trees=180 lr=0.03
+[056/081] PR=0.937065 ROC=0.801423 depth=3 trees=180 lr=0.0359
+[057/081] PR=0.936998 ROC=0.801650 depth=5 trees=120 lr=0.045
+[058/081] PR=0.937188 ROC=0.801983 depth=4 trees=400 lr=0.03
+[059/081] PR=0.937015 ROC=0.801457 depth=2 trees=500 lr=0.0359
+[060/081] PR=0.936909 ROC=0.801553 depth=3 trees=320 lr=0.08
+[061/081] PR=0.935909 ROC=0.798321 depth=3 trees=120 lr=0.015
+[062/081] PR=0.937169 ROC=0.801772 depth=4 trees=320 lr=0.03
+[063/081] PR=0.936803 ROC=0.801638 depth=4 trees=400 lr=0.0359
+[064/081] PR=0.936685 ROC=0.800632 depth=2 trees=400 lr=0.02
+[065/081] PR=0.936964 ROC=0.801476 depth=5 trees=400 lr=0.03
+[066/081] PR=0.935567 ROC=0.797114 depth=2 trees=120 lr=0.025
+[067/081] PR=0.936390 ROC=0.798866 depth=2 trees=320 lr=0.015
+[068/081] PR=0.936859 ROC=0.801378 depth=2 trees=400 lr=0.08
+[069/081] PR=0.936827 ROC=0.801164 depth=6 trees=120 lr=0.02
+[070/081] PR=0.936917 ROC=0.801514 depth=5 trees=250 lr=0.015
+[071/081] PR=0.936983 ROC=0.801574 depth=4 trees=500 lr=0.0359
+[072/081] PR=0.937038 ROC=0.801703 depth=3 trees=500 lr=0.06
+[073/081] PR=0.935849 ROC=0.799292 depth=5 trees=500 lr=0.045
+[074/081] PR=0.936654 ROC=0.801130 depth=4 trees=250 lr=0.08
+[075/081] PR=0.936981 ROC=0.801561 depth=5 trees=180 lr=0.02
+[076/081] PR=0.936876 ROC=0.801502 depth=6 trees=320 lr=0.03
+[077/081] PR=0.936681 ROC=0.801149 depth=6 trees=250 lr=0.02
+[078/081] PR=0.937012 ROC=0.801433 depth=3 trees=320 lr=0.02
+[079/081] PR=0.936937 ROC=0.801125 depth=4 trees=250 lr=0.015
+[080/081] PR=0.937066 ROC=0.801875 depth=5 trees=500 lr=0.02
+[081/081] PR=0.937172 ROC=0.801980 depth=4 trees=500 lr=0.015
+{
+  "run_id": "20260622_101438",
+  "selection_metric": "5-fold CV average_precision",
+  "profile": "broad",
+  "n_candidates": 81,
+  "n_train": 109378,
+  "positive_rate": 0.8217283183089835,
+  "sklearn_version": "1.7.2",
+  "xgboost_version": "3.3.0",
+  "best_params": {
+    "n_estimators": 250,
+    "max_depth": 3,
+    "learning_rate": 0.06,
+    "subsample": 0.85,
+    "colsample_bytree": 0.9,
+    "min_child_weight": 40,
+    "gamma": 0.05,
+    "reg_alpha": 1.0,
+    "reg_lambda": 20.0,
+    "scale_pos_weight": 0.75
+  },
+  "cv_pr_auc_mean": 0.9372205415589484,
+  "cv_pr_auc_std": 0.0020637022629043,
+  "cv_roc_auc_mean": 0.8018750985036567,
+  "cv_roc_auc_std": 0.006142310342002,
+  "oof_best_threshold": 0.39,
+  "oof_best_f1": 0.9127320582375797,
+  "csv_path": "data/processed/evaluation/churn/xgboost/runs/_cv_tuning.csv"
+}

@@ -11,30 +11,30 @@
   "feature_schema_version": "v2",
   "preprocessing": {
     "scale": "robust",
-    "log1p": false,
-    "imbalance": "classweight"
+    "scaler_fit": "raw_train",
+    "log1p": false
   },
   "objective": "binary:logistic",
   "hyperparameters": {
-    "n_estimators": 150,
-    "max_depth": 4,
-    "learning_rate": 0.035906165718883755,
-    "subsample": 0.7752520669964538,
+    "n_estimators": 250,
+    "max_depth": 3,
+    "learning_rate": 0.0359,
+    "subsample": 0.8,
     "colsample_bytree": 1.0,
     "min_child_weight": 20,
-    "reg_alpha": 0.7094774061671105,
-    "reg_lambda": 1.0,
-    "scale_pos_weight": 4,
+    "reg_alpha": 0,
+    "reg_lambda": 10,
+    "scale_pos_weight": 1,
     "early_stopping_rounds": 0,
     "tree_method": "hist"
   },
   "seed": 42,
-  "threshold": 0.8,
+  "threshold": 0.55,
   "threshold_basis": "f1_optimal",
   "metrics": {
-    "roc_auc": 0.7841,
-    "pr_auc": 0.9337,
-    "best_f1": 0.9162
+    "roc_auc": 0.7908,
+    "pr_auc": 0.9361,
+    "best_f1": 0.918
   },
-  "hp_source": "GridSearch (OOT PR-AUC) — bayes(XGBoost_v2_bayes.json)에서 n_estimators/max_depth/colsample_bytree/min_child_weight/reg_lambda 재최적화"
+  "hp_source": "전처리 버그 수정(원시 train에 scaler fit) 후 CV(StratifiedKFold5, PR-AUC) RandomizedSearch 재튜닝. 검토보고서 DecisionTree_XGBoost_교차검증_검토보고서.md §3 반영."
 }

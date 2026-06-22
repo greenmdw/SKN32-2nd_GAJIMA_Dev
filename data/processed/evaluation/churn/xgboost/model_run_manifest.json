@@ -5,12 +5,13 @@
   "label_name": "churn",
   "horizon_days": 7,
   "feature_schema_version": "v2",
-  "input_train_path": "data/processed/churn/models7/XGBoost_v2_train.parquet",
+  "input_train_path": "data/processed/churn/train_tabular_v2.parquet",
   "input_test_path": "data/processed/churn/test_tabular_v2.parquet",
-  "dataset_path": "data/processed/churn/models7/XGBoost_v2_train.parquet",
+  "dataset_path": "data/processed/churn/train_tabular_v2.parquet",
   "artifact_path": "models/churn/xgboost/model.json",
   "preprocessing_config": {
     "input_format": "parquet",
+    "cohort_filter": "cohort_recency7==1",
     "scale": "robust",
     "feature_order": [
       "recency_days",
@@ -39,22 +40,21 @@
     "id_column": "user_id",
     "target_column": "churn",
     "objective": "binary:logistic",
-    "imbalance": "classweight",
-    "n_estimators": 150,
-    "max_depth": 4,
-    "learning_rate": 0.035906165718883755,
-    "subsample": 0.7752520669964538,
+    "n_estimators": 250,
+    "max_depth": 3,
+    "learning_rate": 0.0359,
+    "subsample": 0.8,
     "colsample_bytree": 1.0,
     "min_child_weight": 20,
-    "reg_alpha": 0.7094774061671105,
-    "reg_lambda": 1.0,
-    "scale_pos_weight": 4
+    "reg_alpha": 0,
+    "reg_lambda": 10,
+    "scale_pos_weight": 1
   },
   "metrics": {
-    "roc_auc": 0.7841,
-    "pr_auc": 0.9337,
-    "best_threshold": 0.8,
-    "best_f1": 0.9162
+    "roc_auc": 0.7908,
+    "pr_auc": 0.9361,
+    "best_threshold": 0.55,
+    "best_f1": 0.918
   },
   "evaluation": {
     "eval_predictions_path": "data/processed/evaluation/churn/xgboost/eval_predictions.parquet",
@@ -67,5 +67,5 @@
     "business_value_path": "data/processed/evaluation/churn/xgboost/business_value.json"
   },
   "is_active_candidate": true,
-  "created_at": "2026-06-22T00:20:21.598822+09:00"
+  "created_at": "2026-06-22T09:07:07.163291+09:00"
 }

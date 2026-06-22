@@ -98,18 +98,22 @@ def load_sequence(path):
     return X, y, uid
 
 
-def load_tabular_v2(model_key):
-    """v2 22피처 로드 -> (X_tr, y_tr, uid_tr), (X_te, y_te, uid_te).
+def load_tabular_v2(model_key=None):
+    """v2 22피처 **원시값** 로드 -> (X_tr, y_tr, uid_tr), (X_te, y_te, uid_te).
 
-    train: models7/{Model}_v2_train.parquet — 이미 recency<=7 코호트만 들어있음.
-    test : test_tabular_v2.parquet 는 전체(298k)라 cohort_recency7==1 로 코호트 필터해야
-           train과 같은 모집단(recency<=7)이 된다.
-    ★ 이 필터를 빠뜨리면 OOT 평가가 쉬워져(이탈 명백한 유저 포함) 점수가 부풀려진다.
+    train/test 모두 train_tabular_v2/test_tabular_v2 에서 cohort_recency7==1 로 코호트 필터.
+    스케일링은 하지 않고, 각 trainer가 자기 scaler로 train에 fit → train·test 동일 적용한다.
+
+    ★ 버그수정: 이전엔 models7/{Model}_v2_train.parquet 을 로드했는데, 이 파일은 모델별로
+      이미 스케일링된 사본이다(예: XGBoost_v2_train = RobustScaler(원시)). 그 상태에서 trainer가
+      scaler를 다시 fit하고 원시 test에 적용하면 train(스케일)·test(원시) 스케일이 어긋나
+      트리 분기 임계값이 안 맞아 성능이 깎였다. → 원시 train_tabular_v2 로 통일해 해결.
+    (model_key 인자는 호출 호환성 위해 남겨두며 사용하지 않는다.)
     """
-    name = V2_FILE[model_key]  # decisiontree -> "DecisionTree" 식 파일 접두어
-    tr = pd.read_parquet(V2_MODELS7 / f"{name}_v2_train.parquet")
+    tr = pd.read_parquet(V2_DIR / "train_tabular_v2.parquet")
     te = pd.read_parquet(V2_DIR / "test_tabular_v2.parquet")
-    te = te[te["cohort_recency7"] == 1]  # 코호트 필터 — train과 동일 모집단 맞추기
+    tr = tr[tr["cohort_recency7"] == 1]  # 코호트 필터 — recency<=7 모집단
+    te = te[te["cohort_recency7"] == 1]  # test도 동일 모집단 맞춤(빠뜨리면 점수 부풀려짐)
 
     def split(df):
         # 22 feature는 float64, target(churn)=int32, user_id=int64.
