@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "data": {
+    "active_model": {
+      "model_id": 1,
+      "model_name": "CatBoost_Churn_v2",
+      "model_type": "tree",
+      "pr_auc": 0.93,
+      "roc_auc": 0.79
+    },
+    "kpi": {
+      "n_users": 100000,
+      "n_high_risk": 12000,
+      "avg_churn_probability": 0.41,
+      "expected_recovery": 31200000
+    }
+  },
+  "meta": {
+    "schema_version": "dashboard.v1",
+    "source": "mock"
+  },
+  "error": null
+}

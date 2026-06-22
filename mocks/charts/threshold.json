@@ -1,0 +1,1 @@
+{"chart_name":"threshold","chart_type":"line","title":"Threshold P/R/F1","x":"threshold","y":["precision","recall","f1"],"data":[{"threshold":0.3,"precision":0.84,"recall":0.95,"f1":0.89},{"threshold":0.6,"precision":0.89,"recall":0.82,"f1":0.85}],"summary":{"best_threshold":0.65},"meta":{"schema_version":"chart.v1","source":"mock"}}
