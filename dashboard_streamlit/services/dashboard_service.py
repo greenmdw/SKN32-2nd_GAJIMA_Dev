@@ -10,3 +10,5 @@ def get_user_dashboard(user_id: str) -> dict:
 
 def get_model_names() -> dict:
     return request_json("GET", "/dashboard/models")
+
+get_summary = get_dashboard_summary
