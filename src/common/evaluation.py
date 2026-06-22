@@ -115,6 +115,8 @@ def evaluate_and_save(
     shap_summary=None,
     business_assumptions=None,
     split="test",
+    fixed_threshold=None,
+    threshold_grid_step=0.05,
 ):
     """평가 산출물 9종을 저장하고 metrics 요약 dict를 반환한다.
 
@@ -122,18 +124,31 @@ def evaluate_and_save(
       metrics_summary(#4,#10) · threshold_curve(#9) · calibration_curve(#12) ·
       lift_curve(#11) · score_distribution(#8) · shap_summary(#13) ·
       business_value(#14,#15) · training_history(#5) · eval_predictions(#6,#7 재계산 원천)
+
+    fixed_threshold: 운영 임계값을 외부(예: train OOF)에서 정해 넘기면 그 값으로 고정한다.
+      None이면 평가셋 F1 최대점을 자동 선택(기존 동작). 평가셋으로 임계값을 고르는 건 누수이므로
+      운영에선 train OOF에서 구한 값을 넘기는 것을 권장(19-3 §11.2).
+    threshold_grid_step: threshold_curve와 자동선택에 쓰는 그리드 간격(기본 0.05).
     """
     eval_dir = Path(eval_dir)
     eval_dir.mkdir(parents=True, exist_ok=True)
     y_true = np.asarray(y_true).astype(int)
     y_score = np.asarray(y_score).astype(float)
 
-    # 임계값: 0.05~0.95를 0.05 간격으로 훑어 F1이 최대인 지점을 운영 임계값으로 채택.
-    # 주의: PR-AUC/ROC는 임계값 무관(모델 품질), precision/recall/f1/confusion은 이 임계값 기준값.
-    thresholds = np.round(np.arange(0.05, 0.96, 0.05), 2)
+    # 임계값 그리드(곡선 + 자동선택용). PR-AUC/ROC는 임계값 무관(모델 품질),
+    # precision/recall/f1/confusion만 이 임계값 기준값.
+    thresholds = np.round(np.arange(0.05, 0.96, threshold_grid_step), 2)
     prec, rec, f1 = _threshold_curve(y_true, y_score, thresholds)
-    best_i = int(np.argmax(f1))
-    best_t = float(thresholds[best_i])
+    if fixed_threshold is not None:
+        # 운영 임계값 고정(누수 없음). 그리드에 없을 수 있어 직접 P/R/F1 계산.
+        best_t = float(fixed_threshold)
+        bp, br, bf, _ = precision_recall_fscore_support(
+            y_true, (y_score >= best_t).astype(int), average="binary", zero_division=0)
+        best_prec, best_rec, best_f1 = float(bp), float(br), float(bf)
+    else:
+        best_i = int(np.argmax(f1))
+        best_t = float(thresholds[best_i])
+        best_prec, best_rec, best_f1 = prec[best_i], rec[best_i], f1[best_i]
     y_pred = (y_score >= best_t).astype(int)
 
     # PR-AUC = average_precision, ROC-AUC = roc_auc_score (둘 다 임계값 무관 = 순위 품질).
@@ -155,9 +170,9 @@ def evaluate_and_save(
             "roc_auc": roc,
             "pr_auc": pr,
             "best_threshold": best_t,
-            "precision": prec[best_i],
-            "recall": rec[best_i],
-            "f1": f1[best_i],
+            "precision": best_prec,
+            "recall": best_rec,
+            "f1": best_f1,
             "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
         },
     )
@@ -209,8 +224,8 @@ def evaluate_and_save(
         "roc_auc": roc,
         "pr_auc": pr,
         "best_threshold": best_t,
-        "best_f1": f1[best_i],
-        "precision": prec[best_i],
-        "recall": rec[best_i],
+        "best_f1": best_f1,
+        "precision": best_prec,
+        "recall": best_rec,
         "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
     }

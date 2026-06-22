@@ -46,6 +46,7 @@
     "subsample": 0.8,
     "colsample_bytree": 1.0,
     "min_child_weight": 20,
+    "gamma": 0,
     "reg_alpha": 0,
     "reg_lambda": 10,
     "scale_pos_weight": 1
@@ -53,8 +54,8 @@
   "metrics": {
     "roc_auc": 0.7908,
     "pr_auc": 0.9361,
-    "best_threshold": 0.55,
-    "best_f1": 0.918
+    "best_threshold": 0.43,
+    "best_f1": 0.9163
   },
   "evaluation": {
     "eval_predictions_path": "data/processed/evaluation/churn/xgboost/eval_predictions.parquet",
@@ -67,5 +68,5 @@
     "business_value_path": "data/processed/evaluation/churn/xgboost/business_value.json"
   },
   "is_active_candidate": true,
-  "created_at": "2026-06-22T09:07:07.163291+09:00"
+  "created_at": "2026-06-22T15:28:15.548718+09:00"
 }

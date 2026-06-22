@@ -1,8 +1,10 @@
 """공통 데이터 로딩.
 
-입력 정본은 19-3 §3 스키마를 따른다. 실제 파일은 레포의 `processed_5m/`에 있다.
-- 트리 모델(DecisionTree/XGBoost): recency<=7 코호트 raw tabular
-- Transformer: recency<=7 코호트 raw 시퀀스(seq_len=4)
+입력 정본은 19-3 §3 스키마를 따른다.
+- 트리 모델(DecisionTree/XGBoost): v2 22피처 tabular. **`data/processed/churn/`(V2_DIR) 고정** —
+  `load_tabular_v2`가 직접 읽으며 DATA_DIR/CHURN_DATA_DIR 환경변수의 영향을 받지 않는다.
+- Transformer: recency<=7 코호트 raw 시퀀스. `processed_5m/`(DATA_DIR)에서 읽으며,
+  Colab 등에선 CHURN_DATA_DIR 환경변수로 경로를 바꿀 수 있다(시퀀스 경로에만 적용).
 """
 import os
 from pathlib import Path
@@ -39,6 +41,8 @@ SEQ_FEATURES = ["view", "cart", "purchase"]
 # === v2 (22피처) — 전처리팀 v4 산출물 (data/processed/churn) ===
 # 기존 10피처 + category/brand/session/price 12피처. 범주형 ID는 제외된 순수 숫자형.
 V2_DIR = ROOT / "data" / "processed" / "churn"
+# DEPRECATED: 사전 스케일된 models7 사본 경로(스케일 불일치 버그의 원인). 신규 코드 사용 금지.
+# 원시 train_tabular_v2/test_tabular_v2(V2_DIR)로 통일됨. (benchmark.py 하위호환 위해 정의만 유지)
 V2_MODELS7 = V2_DIR / "models7"
 FEATURE_ORDER_V2 = FEATURE_ORDER + [
     "min_price",

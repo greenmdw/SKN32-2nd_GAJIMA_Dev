@@ -203,7 +203,19 @@ def main():
     current = current.sort_values(
         ["cv_pr_auc_mean", "cv_roc_auc_mean"], ascending=False
     )
-    best_row = current.iloc[0]
+
+    # 노이즈 가드: CV PR-AUC std가 ~0.002라 80후보 중 '최대'만 고르면 운 좋은 노이즈를 집는다.
+    # 최고점의 1-std 이내(통계적 동률) 후보들 중 '가장 단순한' 모델을 선택한다.
+    top = current.iloc[0]
+    tol = float(top["cv_pr_auc_mean"]) - float(top["cv_pr_auc_std"])
+    tied = current[current["cv_pr_auc_mean"] >= tol].copy()
+    tied["_complexity"] = tied["n_estimators"] * tied["max_depth"]
+    tied = tied.sort_values(["_complexity", "n_estimators", "max_depth", "learning_rate"])
+    best_row = tied.iloc[0]
+    baseline_tied = bool((tied["is_baseline"] == True).any())  # noqa: E712
+    print(f"[select] 1-std 내 동률 {len(tied)}개 → 최단순 선택"
+          f"(trees={int(best_row['n_estimators'])}, depth={int(best_row['max_depth'])}); "
+          f"baseline_within_tie={baseline_tied}")
     int_params = {"n_estimators", "max_depth", "min_child_weight"}
     best_params = {
         key: int(best_row[key]) if key in int_params else float(best_row[key])
@@ -217,6 +229,9 @@ def main():
     summary = {
         "run_id": run_id,
         "selection_metric": "5-fold CV average_precision",
+        "selection_rule": "best CV PR-AUC의 1-std 이내 동률 중 최단순 모델",
+        "n_tied_within_1std": int(len(tied)),
+        "baseline_within_tie": baseline_tied,
         "profile": args.profile,
         "n_candidates": len(candidates),
         "n_train": int(len(y)),
