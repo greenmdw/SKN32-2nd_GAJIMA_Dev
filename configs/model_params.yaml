@@ -1,0 +1,2 @@
+# 모델별 HP는 data/processed/evaluation/churn/{key}/model_run_manifest.json 의 best_params 참조.
+active_model: CatBoost_Churn_v2

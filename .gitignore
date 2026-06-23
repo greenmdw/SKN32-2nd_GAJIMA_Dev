@@ -8,9 +8,37 @@ registered_faces/*.jpeg
 face_db.npy
 models/*.pkl
 !models/churn_model.joblib
+<<<<<<< HEAD
 
 # output files
 coupon_targets.csv
 coupon_output.txt
 metrics_output.txt
 model_output.txt
+=======
+# 데이터·모델 바이너리(team_project_churn에서 복사/재현 — git 제외)
+data/
+models/preprocessors/
+models/sequence/
+*.parquet
+*.npz
+*.joblib
+!models/churn_model.joblib
+
+node_modules/
+**/node_modules/
+
+models/
+*.zip
+# 임시 로그·로컬 작업 파일(업로드 제외)
+.tmp_*
+*.err.log
+RULE.md
+/plans/
+/backups/
+.vscode/
+.idea/
+
+# CatBoost 학습 임시 로그(산출물 아님)
+catboost_info/
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f

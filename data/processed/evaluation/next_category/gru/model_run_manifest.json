@@ -1,0 +1,17 @@
+{
+  "model_name": "CategoryGRU_v1",
+  "task": "next_category",
+  "dataset": "data/processed/next_category/category_gru_v1.npz",
+  "dataset_metadata": "data/processed/next_category/category_gru_v1_meta.json",
+  "model": "models/next_category/gru/model.pt",
+  "model_config": "models/next_category/gru/model_config.json",
+  "feature_schema": "models/next_category/gru/feature_schema.json",
+  "category_mapping": "models/next_category/gru/category_index_map.json",
+  "inference_module": "src/models/next_category/gru_inference.py",
+  "evaluation_period": "2020-02",
+  "selection_metric": "val_hit_at_4",
+  "best_epoch": 12,
+  "recommendation_count": 4,
+  "test_hit_at_4": 0.76653,
+  "baseline_hit_at_4": 0.66788
+}

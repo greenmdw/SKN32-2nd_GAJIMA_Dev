@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "data": {
+    "rows": [
+      {
+        "user_id": "10001",
+        "churn_probability": 0.91,
+        "risk_level": "high",
+        "recommended_action": "coupon",
+        "predicted_at": "2026-06-21T00:00:00+09:00"
+      }
+    ]
+  },
+  "meta": {
+    "schema_version": "dashboard.v1",
+    "source": "mock"
+  },
+  "error": null
+}

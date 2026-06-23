@@ -4,6 +4,7 @@
   "model_type": "tree",
   "label_name": "churn",
   "horizon_days": 7,
+<<<<<<< HEAD
   "n_test": 109736,
   "positive_rate": 0.833,
   "roc_auc": 0.791,
@@ -19,3 +20,24 @@
     "tp": 89869
   }
 }
+=======
+  "n_train": 109378,
+  "n_test": 109736,
+  "positive_rate": 0.833,
+  "roc_auc": 0.7914,
+  "pr_auc": 0.9364,
+  "best_threshold": 0.52,
+  "precision": 0.8614,
+  "recall": 0.983,
+  "f1": 0.9182,
+  "accuracy": 0.8542,
+  "brier": 0.1104,
+  "ece": 0.0239,
+  "confusion_matrix": {
+    "tn": 3876,
+    "fp": 14453,
+    "fn": 1550,
+    "tp": 89857
+  }
+}
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f

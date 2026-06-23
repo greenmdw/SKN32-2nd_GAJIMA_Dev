@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+html,
+body,
+[class*="css"] {
+    font-family: "Inter", sans-serif;
+}
+
+/* 브라우저 기본 여백 및 헤더 영역 제거 */
+[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
+.stApp {
+    background: #ffffff;
+}
+
+header,
+[data-testid="stToolbar"],
+[data-testid="stDecoration"] {
+    display: none;
+}
+
+.block-container {
+    /*padding-top: 0px ; !* 상단 여백 제거 *!*/
+    max-width: 920px;
+    padding: 40px 24px 64px;
+}
+
+.brand-shell {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 8px 0 32px;
+}
+
+.brand-logo svg {
+    width: 72px;
+    height: 72px;
+}
+
+.brand-shell h1 {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.brand-shell p {
+    color: #586069;
+    font-size: 15px;
+    margin: 8px 0 0;
+}
+
+.stButton > button {
+    min-height: 52px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+[data-testid="stCameraInput"] {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.landing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 0px; /* 상단 빈 공간 줄이기 */
+}
+
+.header-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.logo svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 12px;
+}
+
+/* 버튼 컨테이너: 폭을 조금 더 좁게 */
+.button-container {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 버튼 높이 조금 줄이기 */
+.stButton > button {
+    min-height: 40px;
+    font-size: 14px;
+}
+
+/* 푸터: fixed 삭제하여 버튼 아래에 자연스럽게 배치 */
+.foot {
+    margin-top: 60px; /* 버튼과의 간격 확보 */
+    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* 상단 헤더와 버튼 사이의 3줄 공백 (약 3em 정도의 높이) */
+.spacer {
+    height: 8em;
+}

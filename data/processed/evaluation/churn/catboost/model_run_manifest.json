@@ -5,8 +5,15 @@
   "label_name": "churn",
   "horizon_days": 7,
   "feature_schema_version": "v2",
+<<<<<<< HEAD
   "dataset_path": "data/processed/churn/models7/CatBoost_v2_train.parquet",
   "artifact_path": "models/preprocessors/prep_CatBoost_v2.joblib",
+=======
+  "input_train_path": "data/processed/churn/models7/CatBoost_v2_train.parquet",
+  "input_test_path": "data/processed/churn/test_tabular_v2.parquet",
+  "dataset_path": "data/processed/churn/models7/CatBoost_v2_train.parquet",
+  "artifact_path": "models/churn/catboost/model.cbm",
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f
   "preprocessing_config": {
     "input_format": "parquet",
     "scale": "none",
@@ -20,15 +27,37 @@
       "n_remove_from_cart",
       "n_purchase",
       "avg_price",
+<<<<<<< HEAD
       "purch_amt"
+=======
+      "purch_amt",
+      "min_price",
+      "max_price",
+      "std_price",
+      "purchase_avg_price",
+      "remove_ratio",
+      "cart_purchase_ratio",
+      "n_categories",
+      "cat_entropy",
+      "n_brands",
+      "brand_loyalty",
+      "n_sessions",
+      "events_per_session"
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f
     ],
     "id_column": "user_id",
     "target_column": "churn"
   },
   "metrics": {
+<<<<<<< HEAD
     "roc_auc": 0.791,
     "pr_auc": 0.9347,
     "best_threshold": 0.49,
+=======
+    "roc_auc": 0.7914,
+    "pr_auc": 0.9364,
+    "best_threshold": 0.52,
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f
     "best_f1": 0.9182
   },
   "evaluation": {
@@ -36,6 +65,11 @@
     "roc_curve_path": "data/processed/evaluation/churn/catboost/roc_curve.json",
     "pr_curve_path": "data/processed/evaluation/churn/catboost/pr_curve.json",
     "threshold_curve_path": "data/processed/evaluation/churn/catboost/threshold_curve.json",
+<<<<<<< HEAD
+=======
+    "data_distribution_path": "data/processed/evaluation/churn/catboost/data_distribution.json",
+    "cohort_summary_path": "data/processed/evaluation/churn/catboost/cohort_summary.json",
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f
     "confusion_matrix_path": "data/processed/evaluation/churn/catboost/confusion_matrix.json",
     "calibration_curve_path": "data/processed/evaluation/churn/catboost/calibration_curve.json",
     "lift_curve_path": "data/processed/evaluation/churn/catboost/lift_curve.json",
@@ -46,5 +80,11 @@
     "training_history_path": "data/processed/evaluation/churn/catboost/training_history.json",
     "eval_predictions_path": "data/processed/evaluation/churn/catboost/eval_predictions.parquet"
   },
+<<<<<<< HEAD
   "is_active_candidate": true
 }
+=======
+  "is_active_candidate": true,
+  "created_at": "2026-06-21T21:27:32+09:00"
+}
+>>>>>>> 0e0a13ae8300f05f871d09e39322e3783e1daa8f

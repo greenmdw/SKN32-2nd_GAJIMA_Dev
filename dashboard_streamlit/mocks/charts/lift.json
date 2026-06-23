@@ -1,0 +1,1 @@
+{"chart_name":"lift","chart_type":"line","title":"Lift Chart","x":"top_percent","y":["capture_rate","lift"],"data":[{"top_percent":5,"capture_rate":0.14,"lift":2.8},{"top_percent":10,"capture_rate":0.27,"lift":2.7}],"meta":{"schema_version":"chart.v1","source":"mock"}}

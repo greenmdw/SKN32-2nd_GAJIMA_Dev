@@ -1,0 +1,23 @@
+{
+  "source_dataset": "REES46 cosmetics 2019-Oct..2020-Feb",
+  "input_files": {
+    "product_catalog": "data\\processed\\recommendation\\product_catalog.parquet",
+    "category_catalog": "data\\processed\\recommendation\\category_catalog.parquet",
+    "category_similarity": "data\\processed\\recommendation\\category_similar.parquet",
+    "raw_dir_for_brand_mode": "C:\\Users\\playdata2\\Documents\\ml_workspace\\team_project_churn\\src"
+  },
+  "outputs": {
+    "categories_csv": "simulation_site/neon/seed/categories.csv",
+    "brands_csv": "simulation_site/neon/seed/brands.csv",
+    "products_csv": "simulation_site/neon/seed/products.csv",
+    "category_similarity_csv": "simulation_site/neon/seed/category_similarity.csv"
+  },
+  "counts": {
+    "categories": 525,
+    "brands": 274,
+    "products": 54571,
+    "category_similarity_rows": 5095,
+    "products_with_raw_brand_mode": 54571
+  },
+  "id_policy": "product_id/category_id are exported as TEXT to avoid JavaScript precision loss."
+}
