@@ -27,6 +27,8 @@ API_KEY = os.environ.get("API_KEY", "dev-key")
 DATA_DIR = GAJIMA_ROOT / "data" / "processed"
 EVAL_DIR = DATA_DIR / "evaluation"
 REC_DIR = DATA_DIR / "recommendation"
+SB_DIR = DATA_DIR / "session_bounce"
+MODELS_DIR = GAJIMA_ROOT / "models"
 
 # MYSQL_HOST 가 있으면 MySQL 운영 모드, 없으면 memory 폴백
 MYSQL = ({

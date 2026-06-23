@@ -1,0 +1,53 @@
+{
+  "source": "data2/clean/all_months_clean_core.csv",
+  "dataset": "data/processed/next_category/category_gru_v1.npz",
+  "split": {
+    "train": "2019-10~2019-12",
+    "val": "2020-01",
+    "test": "2020-02"
+  },
+  "seq_len": 10,
+  "min_history": 2,
+  "max_windows_per_session": 20,
+  "numeric_features": [
+    "is_view",
+    "is_cart",
+    "is_remove",
+    "is_purchase",
+    "gap_log",
+    "price_log"
+  ],
+  "sample_capacity": {
+    "train": 300000,
+    "val": 75000,
+    "test": 100000
+  },
+  "eligible_windows_seen": {
+    "train": 5276131,
+    "val": 1826147,
+    "test": 1802428
+  },
+  "saved_samples": {
+    "train": 300000,
+    "val": 75000,
+    "test": 100000
+  },
+  "vocab_size": 516,
+  "category_count": 514,
+  "seed": 42,
+  "stats": {
+    "rows_read": 15667350,
+    "rows_skipped": 3179,
+    "unknown_target": {
+      "val": 750,
+      "test": 0
+    },
+    "expired_sessions": 3591435,
+    "external_test": {
+      "source": "data2/2020-Feb.csv",
+      "rows_read": 4156682,
+      "rows_skipped": 1055,
+      "unknown_target": 2808
+    }
+  }
+}

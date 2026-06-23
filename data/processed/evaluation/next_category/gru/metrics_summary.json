@@ -1,0 +1,30 @@
+{
+  "model_name": "CategoryGRU_v1",
+  "task": "next_category",
+  "device": "cuda",
+  "vocab_size": 516,
+  "n_train": 300000,
+  "n_val": 75000,
+  "n_test": 100000,
+  "best_epoch": 12,
+  "selection_metric": "val_hit_at_4",
+  "test": {
+    "loss": 2.0170580500793456,
+    "top1": 0.6240700000572205,
+    "hit_at_4": 0.76653,
+    "hit_at_10": 0.8311899999809265,
+    "mrr_at_10": 0.6934708705711364,
+    "coverage_at_10": 444,
+    "samples": 100000,
+    "inference_ms_per_sample": 0.02068604399999458
+  },
+  "last_category_baseline": {
+    "name": "last_category_plus_train_popularity",
+    "top1": 0.63416,
+    "hit_at_4": 0.66788,
+    "hit_at_10": 0.72163,
+    "mrr_at_10": 0.6539086904761905,
+    "samples": 100000,
+    "coverage_at_10": 393
+  }
+}

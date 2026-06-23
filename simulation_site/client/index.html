@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>E-Commerce Churn Simulator</title>    
+    <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    THIS IS THE END OF A COMMENT BLOCK, BLOCK TO BE DELETED -->
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- 애널리틱스(umami)는 env 미설정 시 미치환 플레이스홀더가 상대경로(/product/...)로 요청돼
+         Express decodeURIComponent URIError → dev 서버 다운을 유발했음. 정적 태그 제거하고
+         env가 실제 URL일 때만 main.tsx에서 동적 주입. 필요 시 .env에 VITE_ANALYTICS_* 지정. -->
+  </body>
+
+</html>

@@ -50,6 +50,8 @@
     "roc_curve_path": "data/processed/evaluation/churn/catboost/roc_curve.json",
     "pr_curve_path": "data/processed/evaluation/churn/catboost/pr_curve.json",
     "threshold_curve_path": "data/processed/evaluation/churn/catboost/threshold_curve.json",
+    "data_distribution_path": "data/processed/evaluation/churn/catboost/data_distribution.json",
+    "cohort_summary_path": "data/processed/evaluation/churn/catboost/cohort_summary.json",
     "confusion_matrix_path": "data/processed/evaluation/churn/catboost/confusion_matrix.json",
     "calibration_curve_path": "data/processed/evaluation/churn/catboost/calibration_curve.json",
     "lift_curve_path": "data/processed/evaluation/churn/catboost/lift_curve.json",

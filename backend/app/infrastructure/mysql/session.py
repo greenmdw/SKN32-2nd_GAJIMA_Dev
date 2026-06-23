@@ -96,11 +96,21 @@ class ModelRepository:
             return _q("SELECT * FROM model_registry WHERE is_active=1", fetch=True) or []
         return [x for x in _mem["models"] if x.get("is_active")]
 
+    def exists(self, model_id) -> bool:
+        if model_id is None:
+            return False
+        if mode() == "mysql":
+            rows = _q("SELECT 1 FROM model_registry WHERE model_id=%s", (model_id,), fetch=True)
+            return bool(rows)
+        return any(x["model_id"] == model_id for x in _mem["models"])
+
 
 # ---------------- model_evaluation ----------------
 class EvaluationRepository:
     def insert(self, model_id, e: dict) -> dict:
         if mode() == "mysql":
+            # 갱신 정책: 재제출 시 모델별 평가는 최신 1건만 유지(무한 누적 방지)
+            _q("DELETE FROM model_evaluation WHERE model_id=%s", (model_id,))
             eid = _q("""INSERT INTO model_evaluation
                         (model_id,dataset_tag,split_name,roc_auc,pr_auc,best_threshold,best_f1,
                          eval_predictions_path,shap_summary_path)
@@ -109,6 +119,7 @@ class EvaluationRepository:
                       e.get("roc_auc"), e.get("pr_auc"), e.get("best_threshold"), e.get("best_f1"),
                       e.get("eval_predictions_path"), e.get("shap_summary_path")))
             return {"eval_id": eid}
+        _mem["evals"] = [x for x in _mem["evals"] if x["model_id"] != model_id]  # 모델별 최신만
         eid = len(_mem["evals"]) + 1
         _mem["evals"].append({"eval_id": eid, "model_id": model_id, **e})
         return {"eval_id": eid}
@@ -131,6 +142,7 @@ class PredictionRepository:
                 p.get("horizon_days", 7), p.get("recommended_action")))
         else:
             _mem["predictions"].append(p)
+            _mem["predictions"][:] = _mem["predictions"][-10000:]   # memory 폴백 RAM 상한
 
     def latest(self, user_id):
         if mode() == "mysql":
@@ -156,7 +168,44 @@ class PredictionRepository:
         rows.sort(key=lambda x: x["churn_probability"], reverse=True)
         return rows[:int(limit)]
 
+    def summary_stats(self) -> dict:
+        """운영 요약 집계(19-7-1 /dashboard/summary): 전체수·고위험수·평균확률·최신시각."""
+        if mode() == "mysql":
+            try:
+                r = _q("""SELECT COUNT(*) total,
+                                 SUM(CASE WHEN risk_level='high' THEN 1 ELSE 0 END) high_risk,
+                                 AVG(churn_probability) avg_p, MAX(created_at) latest_at
+                          FROM prediction_log""", fetch=True)
+                row = r[0] if r else {}
+                return {"total": int(row.get("total") or 0),
+                        "high_risk": int(row.get("high_risk") or 0),
+                        "avg": round(float(row.get("avg_p") or 0), 4),
+                        "latest_at": (str(row["latest_at"]) if row.get("latest_at") else None)}
+            except Exception:
+                return {"total": 0, "high_risk": 0, "avg": 0.0, "latest_at": None}
+        preds = _mem["predictions"]
+        total = len(preds)
+        high = sum(1 for x in preds if x.get("risk_level") == "high")
+        avg = round(sum(float(x.get("churn_probability", 0)) for x in preds) / total, 4) if total else 0.0
+        return {"total": total, "high_risk": high, "avg": avg, "latest_at": None}
+
+
+# ---------------- sim_event_log (26-9 P2 실시간 루프) ----------------
+class SimEventRepository:
+    def log(self, e: dict):
+        if mode() == "mysql":
+            _q("""INSERT INTO sim_event_log
+                  (user_id,session_id,event_type,product_id,category_id,brand,price,churn_prob,risk_level)
+                  VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+               (e["user_id"], e["session_id"], e["event_type"], e.get("product_id"),
+                e.get("category_id"), e.get("brand"), e.get("price"),
+                e.get("churn_prob"), e.get("risk_level")))
+        else:
+            _mem.setdefault("sim_events", []).append(e)
+            _mem["sim_events"][:] = _mem["sim_events"][-5000:]   # memory 폴백 RAM 상한
+
 
 model_repository = ModelRepository()
 evaluation_repository = EvaluationRepository()
 prediction_repository = PredictionRepository()
+sim_event_repository = SimEventRepository()
